@@ -27,6 +27,19 @@ const columns: Column<TypesProduct>[] = [
   //{ id: 'stock', numeric: true, disablePadding: false, label: 'คงเหลือ' },
   { id: 'availablestock', numeric: true, disablePadding: false, label: 'พร้อมขาย' },
   {
+    id: 'warehousePrice',
+    numeric: true,
+    disablePadding: false,
+    label: 'ราคา',
+    format: (value: TypesProduct['warehousePrice']) => {
+      if (!value?.listPrice?.length) return '-';
+
+      return value.listPrice.map(price =>
+        `${price.priceName}: ${price.price.toLocaleString()}฿`
+      ).join(', ');
+    }
+  },
+  {
     id: 'categories',
     numeric: false,
     disablePadding: false,
