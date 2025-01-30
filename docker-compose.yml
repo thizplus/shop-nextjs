@@ -1,18 +1,17 @@
 version: '3.8'
 services:
   web:
-    container_name: pim-ecom-nextjs
-    image: pim-ecom-nextjs
+    container_name: shop-nextjs
+    image: shop-nextjs
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL}
+        NEXT_PUBLIC_STORE_URL: ${NEXT_PUBLIC_STORE_URL}
         NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME}
-        NEXT_PUBLIC_ZORT_STORENAME: ${NEXT_PUBLIC_ZORT_STORENAME}
-        NEXT_PUBLIC_ZORT_APIKEY: ${NEXT_PUBLIC_ZORT_APIKEY}
-        NEXT_PUBLIC_ZORT_APISECRET: ${NEXT_PUBLIC_ZORT_APISECRET}
+        NEXT_PUBLIC_SITE_CODE: ${NEXT_PUBLIC_SITE_CODE}
     ports:
       - '3000:3000'
     restart: always

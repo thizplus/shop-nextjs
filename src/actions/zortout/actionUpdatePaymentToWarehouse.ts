@@ -5,9 +5,9 @@ interface propsUpdatePayment {
   paymentmethod: string;
 }
 
-const actionUpdatePaymentToZort = async ({ orderId, paymentamount, paymentmethod }: propsUpdatePayment) => {
+const actionUpdatePaymentToWarehouse = async ({ orderId, paymentamount, paymentmethod }: propsUpdatePayment) => {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/zort/update-payment`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/warehouse/update-payment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -33,4 +33,4 @@ const actionUpdatePaymentToZort = async ({ orderId, paymentamount, paymentmethod
   }
 };
 
-export default actionUpdatePaymentToZort;
+export default actionUpdatePaymentToWarehouse;

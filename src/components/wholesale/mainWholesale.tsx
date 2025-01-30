@@ -15,6 +15,9 @@ import { useConfigStore } from '@/stores/configStore';
 import Payment from '../global/header/payment';
 import type { TypeOrder } from "@/types/orderTypes";
 import { usePendingOrders } from '@/actions/backend/orders/usePendingOrders';
+import FooterStore from '../global/footerStore';
+import Slider from '../global/Slider';
+
 
 type PropsPriceId = {
   priceId: string;
@@ -104,7 +107,7 @@ const MainWholesale: React.FC<PropsPriceId> = ({ priceId }) => {
         priceId={priceId}
         priceName={priceData.items[0].name}
       />
-
+      <Slider />
       <ProductList priceId={priceId} />
 
       {/* Show Payment dialog for pending order */}
@@ -117,6 +120,8 @@ const MainWholesale: React.FC<PropsPriceId> = ({ priceId }) => {
           onUpdatePayment={handlePaymentUpdate}
         />
       )}
+
+      <FooterStore />
     </>
   );
 };

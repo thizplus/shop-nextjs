@@ -18,10 +18,13 @@ import useClientAll from '@/actions/backend/clients/useClientAll';
 import useClientSearch from '@/actions/backend/clients/useClientSearch';
 import type { TypeClient } from "@/types/clientTypes";
 import PriceAutocomplete from './PriceAutocomplete';
+import GrabDeliverySwitch from './GrabDeliverySwitch';
+import CustomPriceDialog from './CustomPriceDialog';
+
 
 
 const columns: Column<TypeClient>[] = [
-  { id: 'userId', numeric: true, disablePadding: false, label: 'ID' },
+  //{ id: 'userId', numeric: true, disablePadding: false, label: 'ID' },
   { id: 'displayName', numeric: false, disablePadding: false, label: 'Display Name' },
   {
     id: 'updatedAt',
@@ -46,6 +49,7 @@ const MainClient = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [effectiveSearchQuery, setEffectiveSearchQuery] = useState('');
+
 
   const { data: allProductsData, isLoading: isLoadingAll, isError: isErrorAll, error: errorAll }
     = useClientAll(page + 1, rowsPerPage);
@@ -104,6 +108,14 @@ const MainClient = () => {
       gap: 2,
       alignItems: 'center',
     }}>
+      <CustomPriceDialog
+        userId={row.userId}
+        currentPrices={row.customPrices || []}
+      />
+      <GrabDeliverySwitch
+        userId={row.userId}
+        enabled={row.enableGrabDelivery || false}
+      />
       <PriceAutocomplete
         userId={row.userId}
         currentPrices={row.accessiblePrices?.map(p => p.id) || []}
@@ -113,6 +125,7 @@ const MainClient = () => {
           queryClient.invalidateQueries({ queryKey: ['searchClient'] });
         }}
       />
+
     </Box>
   );
 

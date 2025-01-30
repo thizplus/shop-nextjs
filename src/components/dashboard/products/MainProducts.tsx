@@ -7,7 +7,7 @@ import TextField from '@mui/material/TextField';
 
 import Divider from '@mui/material/Divider';
 
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 
 import BtnImport from "@/components/dashboard/products/btnImport";
 import type { Column } from "@/components/global/EnhancedTable";
@@ -16,18 +16,33 @@ import useProductAll from "@/actions/backend/products/useProductAll";
 import useProductSearch from '@/actions/backend/products/useProductSearch';
 import type { TypesProduct } from "@/types/productTypes";
 
-import StatusSwitch from '@/components/dashboard/products/statusSwitch';
-
 import PriceEditor from '@/components/dashboard/products/priceEditor';
+import EditProductDialog from './EditProductDialog';
 
 const columns: Column<TypesProduct>[] = [
-  { id: 'sku', numeric: false, disablePadding: false, label: 'SKU' },
-
   // { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
-  { id: 'name', numeric: false, disablePadding: false, label: 'Product Name' },
-  { id: 'stock', numeric: true, disablePadding: false, label: 'Stock' },
-  { id: 'availablestock', numeric: true, disablePadding: false, label: 'Available Stock' },
-  { id: 'category', numeric: false, disablePadding: false, label: 'Category' },
+  { id: 'sku', numeric: false, disablePadding: false, label: 'SKU' },
+  { id: 'name', numeric: false, disablePadding: false, label: 'ชื่อสินค้า' },
+
+  //{ id: 'stock', numeric: true, disablePadding: false, label: 'คงเหลือ' },
+  { id: 'availablestock', numeric: true, disablePadding: false, label: 'พร้อมขาย' },
+  {
+    id: 'categories',
+    numeric: false,
+    disablePadding: false,
+    label: 'หมวดหมู่',
+    format: (value: any) => {
+      if (Array.isArray(value)) {
+        const categories = value.map(cat => cat.name).join(', ');
+
+
+        return categories.length > 20 ? categories.substring(0, 20) + '...' : categories;
+      }
+
+
+      return '';
+    }
+  },
   {
     id: 'active',
     numeric: false,
@@ -48,32 +63,7 @@ const columns: Column<TypesProduct>[] = [
 
 ];
 
-const renderActions = (row: TypesProduct) => (
-  <Box sx={{
-    display: 'flex',
-    gap: 2,
-    alignItems: 'center',
-    minWidth: '400px' // ปรับความกว้างตามจำนวน price editors
-  }}>
-    <StatusSwitch items={row} />
-    <Divider orientation="vertical" flexItem />
-    <Box sx={{
-      display: 'flex',
-      gap: 1,
-      flexWrap: 'wrap'
-    }}>
-      {Array.isArray(row.listPrice) && row.listPrice.map((price) => (
-        <PriceEditor
-          key={`${row.sku}-${price.priceId}`} // ใช้ค่าที่ unique เป็น key
-          sku={row.sku}
-          priceId={price.priceId}
-          initialPrice={price.price}
-          priceName={price.priceName}
-        />
-      ))}
-    </Box>
-  </Box>
-);
+
 
 
 const rowsPerPageOptions = [20, 50];
@@ -87,6 +77,8 @@ const MainProducts = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [effectiveSearchQuery, setEffectiveSearchQuery] = useState('');
+
+  const [editingProduct, setEditingProduct] = useState<TypesProduct | null>(null);
 
   const { data: allProductsData, isLoading: isLoadingAll, isError: isErrorAll, error: errorAll }
     = useProductAll(page + 1, rowsPerPage);
@@ -130,6 +122,48 @@ const MainProducts = () => {
     setEffectiveSearchQuery('');
     setPage(0);
   };
+
+
+
+  const renderActions = (row: TypesProduct) => (
+    <Box sx={{
+      display: 'flex',
+      gap: 2,
+      alignItems: 'center',
+      minWidth: '400px' // ปรับความกว้างตามจำนวน price editors
+    }}>
+      {/**
+       * <StatusSwitch items={row} />
+       */}
+      <Divider orientation="vertical" flexItem />
+      <Box sx={{
+        display: 'flex',
+        gap: 1,
+        flexWrap: 'wrap'
+      }}>
+        {Array.isArray(row.listPrice) && row.listPrice.map((price) => (
+          <PriceEditor
+            key={`${row.sku}-${price.priceId}`} // ใช้ค่าที่ unique เป็น key
+            sku={row.sku}
+            priceId={price.priceId}
+            initialPrice={price.price}
+            priceName={price.priceName}
+          />
+        ))}
+      </Box>
+      <Divider orientation="vertical" flexItem />
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <IconButton
+          onClick={() => setEditingProduct(row)}
+          size="small"
+          color="primary"
+        >
+          <i className="tabler-edit" />
+        </IconButton>
+
+      </Box>
+    </Box>
+  );
 
   const isLoading = isSearching ? isLoadingSearch : isLoadingAll;
   const isError = isSearching ? isErrorSearch : isErrorAll;
@@ -209,6 +243,13 @@ const MainProducts = () => {
         onRequestSort={handleRequestSort}
         renderRowActions={renderActions}
       />
+
+      {editingProduct && (
+        <EditProductDialog
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+        />
+      )}
     </>
   );
 }

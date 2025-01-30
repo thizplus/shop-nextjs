@@ -77,6 +77,10 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
           แดชบอร์ด
         </MenuItem>
 
+        <MenuItem href='/dashboard/daily-payments' icon={<i className='tabler-report-money' />}>
+          รายการรอชำระเงิน
+        </MenuItem>
+
 
 
         <MenuSection label='MAIN SYSTEM'>
@@ -102,6 +106,15 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
           <MenuItem icon={<i className='tabler-building-store' />} href='/dashboard/orders'>คำสั่งซื้อทั้งหมด</MenuItem>
 
 
+
+        </MenuSection>
+
+
+        <MenuSection label='EXTENSION'>
+
+
+          <MenuItem icon={<i className='tabler-discount-check-filled' />} href='/dashboard/coupons'>ระบบคูปอง</MenuItem>
+          <MenuItem icon={<i className='tabler-number-123' />} href='/dashboard/point'>ระบบสะสมแต้ม</MenuItem>
 
         </MenuSection>
 

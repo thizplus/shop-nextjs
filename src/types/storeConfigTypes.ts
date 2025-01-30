@@ -3,9 +3,10 @@ export interface LineLoginConfig {
   LINE_LIFF_ID: string;
 }
 
-export interface LineNotificationConfig {
-  LINE_NOTIFY_TOKEN: string;
-  NOTIFY_ENABLED: boolean;
+export interface TelegramNotificationConfig {
+  TELEGRAM_BOT_TOKEN: string;
+  TELEGRAM_CHAT_ID: string;
+  TELEGRAM_ENABLED: boolean;
 }
 
 export interface LineMessageConfig {
@@ -54,12 +55,29 @@ export interface ShippingCostConfig {
   special: SpecialShippingCost;
 }
 
+// สำหรับ slider
+export interface SliderImage {
+  id: string;
+  url: string;
+}
+
+// สำหรับการแสดงผล
+export interface DisplayConfig {
+  logo?: string;
+  sliders: SliderImage[];
+  primaryColor: string;
+  isProtected: boolean; // เพิ่มส่วนนี้
+  shopName?: string;
+  shopSlogan?: string;
+}
+
 // Main Config Type
 export interface StoreConfig {
   lineLogin: LineLoginConfig;
-  lineNotification: LineNotificationConfig;
+  telegramNotification: TelegramNotificationConfig;
   lineMessage: LineMessageConfig;
   slipOK: SlipOKConfig;
   saleModel: SaleModelConfig;
   shippingCost: ShippingCostConfig;
+  displayConfig: DisplayConfig; // เพิ่มส่วนนี้
 }

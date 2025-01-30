@@ -1,8 +1,11 @@
+import type { ObjectId } from "mongodb";
 
 
 export type TypePrice = {
-  _id: string;
-  name: string;
+  _id: ObjectId;
+  priceId: string;
+  priceName: string;
+  status: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

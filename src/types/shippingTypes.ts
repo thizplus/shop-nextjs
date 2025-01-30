@@ -7,6 +7,7 @@ export interface ShippingAddress {
   amphoe: string;
   province: string;
   zipcode: string;
+  location: string;
   isDefault: boolean;
 }
 

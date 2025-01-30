@@ -13,6 +13,7 @@ import actionGetOrders from '@/actions/orders/getOrders'
 import OrderDetail from './orderDetail'
 import formatThaiDateTime from '@/components/global/functions/formatThaiDateTime'
 import getStatusColor from '@/components/global/functions/statusColor'
+import { useConfigStore } from '@/stores/configStore'
 
 type propsMyOrders = {
   profile: TypeClient;
@@ -24,7 +25,8 @@ const MyOrders = ({ profile, priceId }: propsMyOrders) => {
   const [orders, setOrders] = useState<TypeOrder[]>([])
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [totalPages, setTotalPages] = useState<number>(1)
-
+  const { config } = useConfigStore();
+  const primaryColor = config?.displayConfig.primaryColor ? config?.displayConfig.primaryColor : '#000000'
   const handleClickOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
 
@@ -56,12 +58,16 @@ const MyOrders = ({ profile, priceId }: propsMyOrders) => {
 
   return (
     <>
-      <img
+
+
+      <Button
         onClick={handleClickOpen}
-        src={profile.pictureUrl}
-        alt={profile.displayName}
-        className='max-w-[46px] rounded border cursor-pointer'
-      />
+        style={{ flex: 1, borderRadius: 0, background: primaryColor }}
+        className={`border-0`}
+
+      >
+        <i className='tabler-library text-[18px] mr-1' /> <span className='text-[16px]'>ประวัติคำสั่งซื้อ</span>
+      </Button>
 
       <Dialog
         open={open}
@@ -70,40 +76,57 @@ const MyOrders = ({ profile, priceId }: propsMyOrders) => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle id='alert-dialog-title'>MY ORDERS</DialogTitle>
+        <DialogTitle id='alert-dialog-title'>คำสั่งซื้อของฉัน</DialogTitle>
         <DialogContent>
           <div className="mb-4">
-            <div className="font-bold mb-2">เลขที่คำสั่งซื้อ</div>
+
             {orders.map((order) => (
               <div key={order.orderId} className="border-b py-2 flex justify-between">
                 <div className='leading-none'>
                   <p className='text-sm font-bold leading-none block'>{order.orderId}</p>
-                  <p className={`text-sm font-bold leading-none ${getStatusColor(order.payment.status)}`}>
-                    {order.payment.status}
-                  </p>
                   <p className='text-xs'>{formatThaiDateTime(order.createdAt.toString())}</p>
+                  <OrderDetail order={order} />
+
+
+
 
                   {/* เพิ่มส่วนแสดง tracking info */}
                   {order.payment.status === 'success' && order.shippingInfo.trackingNo && (
                     <div className='mt-1 space-y-0.5'>
-                      <p className='text-xs'>
-                        <span className='font-semibold'>เลขพัสดุ:</span> {order.shippingInfo.trackingNo}
+                      <p className='text-xs flex gap-1'>
+                        <span className='font-semibold'>เลขพัสดุ:</span>
+                        <a
+                          href={`https://th.kerryexpress.com/th/track/?track=${order.shippingInfo.trackingNo}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 underline"
+                        >
+                          {order.shippingInfo.trackingNo}
+                        </a>
+
                       </p>
-                      {order.shippingInfo.shippingChannel && (
-                        <p className='text-xs'>
-                          <span className='font-semibold'>ขนส่ง:</span> {order.shippingInfo.shippingChannel}
-                        </p>
-                      )}
+
+
                       {order.shippingInfo.trackingUpdateAt && (
-                        <p className='text-xs text-gray-500'>
-                          อัพเดทเมื่อ: {formatThaiDateTime(order.shippingInfo.trackingUpdateAt.toString())}
-                        </p>
+                        <div className='flex gap-2'>
+                          <p className='text-xs uppercase'>
+                            <span className='font-semibold'>ขนส่ง:</span> {order.shippingInfo.shippingChannel}
+                          </p>
+                          <p className='text-xs text-gray-500'>
+                            {formatThaiDateTime(order.shippingInfo.trackingUpdateAt.toString())}
+                          </p>
+
+                        </div>
                       )}
+
                     </div>
                   )}
+
                 </div>
                 <div className='flex gap-2'>
-                  <OrderDetail order={order} />
+                  <p className={`text-sm font-bold leading-none ${getStatusColor(order.payment.status)}`}>
+                    {order.payment.status}
+                  </p>
                 </div>
               </div>
             ))}
@@ -113,7 +136,7 @@ const MyOrders = ({ profile, priceId }: propsMyOrders) => {
               count={totalPages}
               page={currentPage}
               onChange={handlePageChange}
-              color="primary"
+              color="secondary"
               variant="outlined"
               shape="rounded"
             />

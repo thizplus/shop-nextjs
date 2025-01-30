@@ -6,19 +6,19 @@ const StatusLabel = ({ status }: { status: string }) => {
     switch (status) {
       case 'pending':
         return {
-          label: 'รอชำระเงิน',
+          label: 'รอชำระ',
           color: 'warning' as const,
           icon: <i className="tabler-clock" />
         };
       case 'success':
         return {
-          label: 'ชำระเงินแล้ว',
+          label: 'ชำระแล้ว',
           color: 'success' as const,
           icon: <i className="tabler-check" />
         };
       case 'cancelled':
         return {
-          label: 'ยกเลิกคำสั่งซื้อ',
+          label: 'ยกเลิก',
           color: 'error' as const,
           icon: <i className="tabler-x" />
         };

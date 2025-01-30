@@ -1,0 +1,45 @@
+/* ปรับขนาดและพื้นหลังของลูกศร */
+.swiper-button-next,
+.swiper-button-prev {
+  width: 30px; /* กำหนดขนาดความกว้าง */
+  height: 30px; /* กำหนดขนาดความสูง */
+  background-color: rgba(0, 0, 0, 0.5); /* เพิ่มพื้นหลัง */
+  border-radius: 50%; /* ทำให้เป็นวงกลม */
+  color: white; /* สีของลูกศร */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ปรับตำแหน่งลูกศร */
+.swiper-button-next {
+  right: 10px; /* ระยะห่างจากขอบขวา */
+}
+.swiper-button-prev {
+  left: 10px; /* ระยะห่างจากขอบซ้าย */
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* ปรับแต่งจุด (dot) */
+.swiper-pagination-bullet {
+  background-color: transparent; /* สีของจุด */
+  width: 8px; /* ขนาดของจุด */
+  height: 8px; /* ขนาดของจุด */
+  opacity: 1; /* ให้จุดชัดเจน */
+  margin: 0 5px; /* ระยะห่างระหว่างจุด */
+  border: 1px solid #000;
+}
+
+.swiper-pagination-bullet-active {
+  background-color: #000; /* สีของจุดเมื่อ active */
+}
+
+/* จัดตำแหน่ง pagination ให้อยู่ด้านล่าง */
+.swiper-pagination {
+  bottom: 10px; /* ระยะห่างจากด้านล่าง */
+}

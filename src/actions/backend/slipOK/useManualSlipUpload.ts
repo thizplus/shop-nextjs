@@ -103,19 +103,6 @@ const useManualSlipUpload = ({ order, onSuccess }: UseManualSlipUploadProps): Us
 
       const paymentResult = await paymentResponse.json();
 
-      // 3. Update payment status in Zort
-      await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/zort/update-payment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId: order.orderId,
-          paymentamount: parseFloat(amount),
-          paymentmethod: 'โอนเงิน (Manual)'
-        }),
-      });
-
       setUploadResult(
         paymentResult.fullyPaid
           ? 'ชำระเงินครบถ้วนแล้ว'

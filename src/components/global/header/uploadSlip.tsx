@@ -10,6 +10,7 @@ import { useDropzone } from 'react-dropzone';
 
 import type { TypeOrder } from '@/types/orderTypes';
 import actionVerifySlip from '@/actions/backend/slipOK/verifySlip';
+import CountdownTimer from './CountdownTimer';
 
 type FileProp = File & {
   preview: string;
@@ -19,6 +20,7 @@ type propsOrder = {
   order: TypeOrder;
   onPaymentUpdate: (newPayment: TypeOrder['payment']) => void;
   currentPayment: TypeOrder['payment'];
+  onExpire?: () => void; // เพิ่ม prop นี้
 };
 
 function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
@@ -35,7 +37,7 @@ function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
   return debounced as (...args: Parameters<F>) => void;
 }
 
-const UploadSlip: React.FC<propsOrder> = ({ order, onPaymentUpdate, currentPayment }) => {
+const UploadSlip: React.FC<propsOrder> = ({ order, onPaymentUpdate, currentPayment, onExpire }) => {
   const [file, setFile] = useState<FileProp | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<string | null>(null);
@@ -138,18 +140,29 @@ const UploadSlip: React.FC<propsOrder> = ({ order, onPaymentUpdate, currentPayme
     }
   }, [file, debouncedVerifySlip]);
 
+  useEffect(() => {
+    const expireTime = new Date(order.expire).getTime();
+
+    if (Date.now() >= expireTime) {
+      onExpire?.();  // เรียก callback เมื่อเริ่มต้นถ้าหมดเวลาแล้ว
+    }
+  }, [order.expire, onExpire]);
+
   return (
     <>
       <div {...getRootProps({ className: `dropzone ${isDragActive ? 'active' : ''}` })}>
         <input {...getInputProps()} />
-        <div className='flex items-center flex-col border-dashed border-[1px] rounded-md p-8 cursor-pointer my-2'>
+        <div className='flex items-center flex-col border-dashed border-[1px] rounded-md px-8 py-4 cursor-pointer my-2'>
           <Avatar variant='rounded' className='bs-12 is-12'>
             <i className='tabler-upload' />
           </Avatar>
-          <Typography variant='h6' className='mbe-2.5'>
+          <Typography variant='h6' className='mb-0 leading-none'>
             {isDragActive ? 'วางไฟล์ที่นี่' : 'กรุณาอัพโหลดสลิปโอนเงิน'}
           </Typography>
-          <p className='text-xs'>รายการสั่งซื้อจะเสร็จสมบูรณ์ต่อเมื่อคุณแนบสลิปหลักฐานการชำระเงินแล้วเท่านั้น <strong className='text-red-600'>ระบบจะยกเลิกรายการสั่งซื้ออัตโนมัติ ในกรณีที่ไม่แนบสลิป ภายใน 15 นาที</strong></p>
+          <CountdownTimer expireDate={order.expire} onExpire={onExpire} />
+          <p className='text-xs text-center mt-2'>
+            สลิปที่ไม่มี QR CODE ไม่สามารถตรวจสอบยอดชำระได้ กรุณาส่งหลักฐานให้แอดมิน
+          </p>
         </div>
       </div>
       {file && (

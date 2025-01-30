@@ -138,6 +138,19 @@ const BtnEditShipping: React.FC<BtnEditShippingProps> = ({ address, onAddressUpd
             value={updatedAddress.zipcode}
             onChange={handleInputChange}
           />
+
+          <TextField
+            margin="dense"
+            name="location"
+            label="ระบุตำแหน่ง"
+            type="text"
+            fullWidth
+            variant="outlined"
+            size='small'
+            value={updatedAddress.location}
+            onChange={handleInputChange}
+          />
+
         </DialogContent>
         <DialogActions className='dialog-actions-dense'>
           <Button onClick={handleSaveAddress} variant='contained'>บันทึก</Button>

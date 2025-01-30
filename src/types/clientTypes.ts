@@ -16,8 +16,15 @@ export interface TypeClient {
   idType: string;
   shippingAddresses?: ShippingAddress[];
   accessiblePrices?: AccessiblePrice[]; // เพิ่ม field นี้
+  enableGrabDelivery?: boolean; // เพิ่ม field นี้
   createdAt?: Date;
   updatedAt?: Date;
+  pin?: string; // เพิ่มสำหรับเก็บ PIN
+  isPinVerified?: boolean; // เพิ่มสำหรับเช็คว่าเคยใส่ PIN แล้วหรือยัง
+  customPrices?: {
+    sku: string;
+    price: number;
+  }[];
 }
 
 

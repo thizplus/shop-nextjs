@@ -8,20 +8,22 @@ import TextField from '@mui/material/TextField';
 import BtnCreatePrice from "@/components/dashboard/price/btnCreatePrice";
 import type { Column } from "@/components/global/EnhancedTable";
 import EnhancedTable from "@/components/global/EnhancedTable";
-import usePriceAll from "@/actions/backend/price/usePriceAll";
-import usePriceSearch from '@/actions/backend/price/usePriceSearch';
-import type { TypePrice } from "@/types/priceTypes";
+
+import type { TypePriceList } from "@/types/priceListTypes";
+
 import BtnDeletePrice from '@/components/dashboard/price/btnDeletePrice';
 import BtnEdit from '@/components/dashboard/price/btnEdit';
+import { usePriceLists, usePriceListSearch } from '@/actions/backend/priceList/usePriceList';
 
-const columns: Column<TypePrice>[] = [
-  { id: '_id', numeric: true, disablePadding: false, label: 'ID' },
-  { id: 'name', numeric: false, disablePadding: false, label: 'Price Name' },
+const columns: Column<TypePriceList>[] = [
+
+  { id: 'priceId', numeric: false, disablePadding: false, label: 'รหัส' },
+  { id: 'priceName', numeric: false, disablePadding: false, label: 'ชื่อ' },
   {
     id: 'updatedAt',
     numeric: false,
     disablePadding: false,
-    label: 'Last Updated',
+    label: 'อัพเดท',
     format: (value: Date) => new Date(value).toLocaleString()
   },
 ];
@@ -32,17 +34,17 @@ const rowsPerPageOptions = [20, 50];
 const MainPrice = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[0]);
-  const [orderBy, setOrderBy] = useState<keyof TypePrice>('_id');
+  const [orderBy, setOrderBy] = useState<keyof TypePriceList>('_id');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [effectiveSearchQuery, setEffectiveSearchQuery] = useState('');
 
   const { data: allProductsData, isLoading: isLoadingAll, isError: isErrorAll, error: errorAll }
-    = usePriceAll(page + 1, rowsPerPage);
+    = usePriceLists(page + 1, rowsPerPage);
 
   const { data: searchData, isLoading: isLoadingSearch, isError: isErrorSearch, error: errorSearch }
-    = usePriceSearch(effectiveSearchQuery, page + 1, rowsPerPage);
+    = usePriceListSearch(effectiveSearchQuery, page + 1, rowsPerPage);
 
   useEffect(() => {
     if (!isSearching) {
@@ -59,7 +61,7 @@ const MainPrice = () => {
     setPage(0);
   };
 
-  const handleRequestSort = (event: React.MouseEvent<unknown>, property: keyof TypePrice) => {
+  const handleRequestSort = (event: React.MouseEvent<unknown>, property: keyof TypePriceList) => {
     const isAsc = orderBy === property && order === 'asc';
 
     setOrder(isAsc ? 'desc' : 'asc');
@@ -81,10 +83,11 @@ const MainPrice = () => {
     setPage(0);
   };
 
-  const renderActions = (row: TypePrice) => (
+  const renderActions = (row: TypePriceList) => (
     <>
       <BtnEdit items={row} />
       <BtnDeletePrice items={row} />
+
 
     </>
   );
@@ -148,7 +151,7 @@ const MainPrice = () => {
         </div>
       </div>
 
-      <EnhancedTable<TypePrice>
+      <EnhancedTable<TypePriceList>
         columns={columns}
         data={data.items}
         getRowId={(row) => row._id.toString()}

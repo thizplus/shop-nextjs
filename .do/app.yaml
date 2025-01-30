@@ -1,5 +1,5 @@
 # .do/app.yaml
-name: pim-ecom-nextjs
+name: vip66i-nextjs
 services:
   - name: web
     dockerfile_path: Dockerfile
@@ -21,4 +21,4 @@ services:
         value: 'https://your-backend-url.ondigitalocean.app' # สามารถแก้ไขได้ทีหลัง
       - key: NEXT_PUBLIC_SITE_NAME
         scope: RUN_TIME
-        value: 'ECOMMERCE'
+        value: 'VIP66I'

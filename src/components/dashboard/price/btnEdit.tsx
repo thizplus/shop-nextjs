@@ -3,10 +3,10 @@ import Link from "next/link";
 import EditIcon from '@mui/icons-material/Edit';
 import IconButton from "@mui/material/IconButton";
 
-import type { TypePrice } from "@/types/priceTypes";
+import type { TypePriceList } from "@/types/priceListTypes";
 
 type propsLink = {
-  items: TypePrice;
+  items: TypePriceList;
 }
 
 const BtnEdit = ({ items }: propsLink) => {

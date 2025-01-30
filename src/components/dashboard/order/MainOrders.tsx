@@ -16,6 +16,7 @@ import DialogOrderDetail from '@/components/dashboard/order/dialogOrderDetail';
 import StatusLabel from '@/components/global/statusLabel';
 import formatThaiDateTime from '@/components/global/functions/formatThaiDateTime';
 import DialogSlipManual from './dialogSlipManual';
+import DialogGrabPayment from './dialogGrabPayment';
 
 const columns: Column<TypeOrder>[] = [
   {
@@ -28,9 +29,17 @@ const columns: Column<TypeOrder>[] = [
     id: 'shippingInfo',
     numeric: false,
     disablePadding: false,
-    label: 'ชื่อลูกค้า',
+    label: 'ลูกค้า',
     format: (value) => value.cusName
   },
+  {
+    id: 'shippingMethod',
+    numeric: false,
+    disablePadding: false,
+    label: 'จัดส่ง',
+    format: (value) => value
+  },
+
   {
     id: 'netTotal',
     numeric: true,
@@ -59,7 +68,7 @@ const columns: Column<TypeOrder>[] = [
     id: 'createdAt',
     numeric: false,
     disablePadding: false,
-    label: 'วันที่สั่งซื้อ',
+    label: 'วันที่',
     format: (value: string | Date) => formatThaiDateTime(value.toString()) // แสดงเวลาด้วย
   },
 ];
@@ -122,6 +131,9 @@ const MainOrders = () => {
     <div className='flex gap-2'>
       <DialogOrderDetail order={row} />
       <DialogSlipManual order={row} />
+      {row.shippingMethod === 'grab' && (
+        <DialogGrabPayment order={row} />
+      )}
     </div>
   );
 

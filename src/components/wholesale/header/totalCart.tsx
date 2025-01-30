@@ -18,13 +18,24 @@ import { formatNumber } from '@/components/global/functions/numberFormat';
 import { useCartChanges } from '../header/useCartChanges';
 import ShippingInfo from '@/components/global/shipping/shippingInfo';
 import actionCreateOrder from '@/actions/backend/orders/actionOrder';
+
+/*
 import { sendLineNotification } from '@/actions/global/lineNotification';
 import { sendLineFlexMessage } from '@/actions/global/lineFlexMessage';
-import { sendOrderToZort } from '@/actions/zortout/actionZortout';
+*/
+
 import type { TypeOrder } from '@/types/orderTypes';
 import Payment from '../../global/header/payment';
 import { usePriceUpdate } from '@/actions/wholesale/usePriceUpdate';
-import { checkZortStock } from '@/actions/backend/orders/checkZortStock';
+import { checkWarehouseStock } from '@/actions/backend/orders/checkWarehouseStock';
+import { useShippingMethodStore } from '@/stores/shippingMethodStore';
+import { getClientDeliveryStatus } from '@/actions/client/clientDeliveryStatus';
+import ShippingMethodSelector from '@/components/global/shipping/ShippingMethodSelector';
+import { sendOrderToWarehouse } from '@/actions/zortout/actionWarehouse';
+import type { IClientCoupon } from '@/types/couponTypes';
+import CouponSection from '@/components/global/coupon/CouponSection';
+
+
 
 interface PropsTotalCart {
   priceId: string;
@@ -39,6 +50,18 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
   const cartVersion = useCartChanges(priceId);
   const [payment, setPayment] = useState<TypeOrder | undefined>(undefined);
   const { updateCartPrices } = usePriceUpdate(priceId);
+
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [selectedCoupon, setSelectedCoupon] = useState<IClientCoupon | null>(null);
+
+
+  const { user } = useClientStores();
+  const { method } = useShippingMethodStore();
+
+  const [deliveryStatus, setDeliveryStatus] = useState<{ enableGrabDelivery: boolean }>({
+    enableGrabDelivery: false
+  });
+
 
   const [insufficientStock, setInsufficientStock] = useState<Array<{
     name: string;
@@ -57,6 +80,27 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
       fetchConfig();
     }
   }, [config, fetchConfig]);
+
+  useEffect(() => {
+    const fetchDeliveryStatus = async () => {
+      if (user?.userId) {
+        try {
+          const status = await getClientDeliveryStatus();
+
+          setDeliveryStatus(status);
+        } catch (error) {
+          console.error('Failed to fetch delivery status:', error);
+          setSnackbar({
+            open: true,
+            message: 'ไม่สามารถตรวจสอบสถานะการจัดส่งได้',
+            severity: 'error'
+          });
+        }
+      }
+    };
+
+    fetchDeliveryStatus();
+  }, [user?.userId]); // เพิ่ม dependency เป็น user?.userId
 
   const handleClickOpen = async () => {
     setOpen(true);
@@ -77,6 +121,9 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
   const filteredItems = cartItems.filter(item => item.qty > 0);
 
   const calculateShippingCost = useMemo(() => {
+    // ถ้าเลือก Grab ให้คืนค่า 0
+    if (method === 'grab') return 0;
+
     if (!config || !config.shippingCost || getTotalAmount(priceId) === 0) return 0;
     const totalAmount = getTotalAmount(priceId);
     const { standard, special } = config.shippingCost;
@@ -87,12 +134,16 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
       return Math.ceil(totalAmount / special.value);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, priceId, getTotalAmount, cartVersion]);
+  }, [config, priceId, getTotalAmount, cartVersion, method]);
+
+
 
   const totalWithShipping = useMemo(() => {
     return getTotalAmount(priceId) + calculateShippingCost;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getTotalAmount, priceId, calculateShippingCost, cartVersion]);
+
+  const [netTotal, setNetTotal] = useState(totalWithShipping);
 
   const totalCartSum = useMemo(() => {
     return getTotalAmount(priceId);
@@ -136,7 +187,7 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
 
     try {
       // Check Zort stock first
-      const stockCheck = await checkZortStock(
+      const stockCheck = await checkWarehouseStock(
         filteredItems.map(item => ({
           sku: item.sku,
           qty: item.qty
@@ -167,8 +218,10 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
       const now = new Date();
       const expire = new Date(now.getTime() + 15 * 60000); // +15 นาที
 
+
+
       const orderData = {
-        orderId: `WB-${Date.now()}`,
+        orderId: `${process.env.NEXT_PUBLIC_SITE_CODE}-${Date.now()}`,
         typeOrder: 'store',
         typeId: priceId,
         userId: user.userId,
@@ -188,32 +241,39 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
           amphoe: selectedAddress.amphoe,
           province: selectedAddress.province,
           zipcode: selectedAddress.zipcode,
+          location: selectedAddress.location,
           isDefault: selectedAddress.isDefault || false
         },
         shippingCost: calculateShippingCost,
-        totalAmount: getTotalAmount(priceId),
-        netTotal: totalWithShipping,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        shippingMethod: method,
+        subTotal: getTotalAmount(priceId),
+        totalAmount: getTotalAmount(priceId) - couponDiscount,
+        netTotal: totalWithShipping - couponDiscount,
         expire: expire.toISOString(),
         payment: {
           status: 'pending' as const,
           amount: 0,
           slip: []
-        }
+        },
+        discountAmount: couponDiscount,
+        coupon: selectedCoupon ? {
+          code: selectedCoupon.code,
+          type: selectedCoupon.type,
+          value: selectedCoupon.value,
+          isPercent: selectedCoupon.isPercent,
+          discountAmount: couponDiscount
+        } : undefined
       } as unknown as TypeOrder;
 
-      const createdOrder = await actionCreateOrder(orderData);
+      await actionCreateOrder(orderData);
 
-      console.log('Created Order:', createdOrder);
 
-      console.log('Order data:', orderData);
-      await sendLineNotification(orderData);
-      await sendLineFlexMessage(orderData);
+      // await sendLineNotification(orderData);
+      // await sendLineFlexMessage(orderData);
 
-      const res = await sendOrderToZort(orderData);
+      const res = await sendOrderToWarehouse(orderData);
 
-      console.log('sendOrderToZort: ', res);
+      console.log('orderData: ', orderData);
 
       setSnackbar({ open: true, message: 'สร้างคำสั่งซื้อสำเร็จ', severity: 'success' });
       handleClose();
@@ -259,7 +319,7 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
-
+  const primaryColor = config?.displayConfig.primaryColor ? config?.displayConfig.primaryColor : '#000000'
 
   return (
     <>
@@ -269,7 +329,8 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
           onClick={handleClickOpen}
           size='small'
           disabled={getTotalAmount(priceId) <= 0}
-          className='flex gap-2'
+          className={`flex gap-2`}
+          style={{ background: primaryColor }}
         >
           <i className="tabler-shopping-bag text-[32px]"></i>
           <div className='block leading-none my-auto text-left'>
@@ -335,20 +396,41 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
             ))}
           </div>
 
+          {deliveryStatus?.enableGrabDelivery && (
+            <ShippingMethodSelector
+              enableGrabDelivery={deliveryStatus.enableGrabDelivery}
+            />
+          )}
+
           <ShippingInfo />
+
+          <CouponSection
+            totalAmount={getTotalAmount(priceId)}
+            onApplyCoupon={(discount, coupon) => {
+              setCouponDiscount(discount);
+              setSelectedCoupon(coupon);
+              setNetTotal(totalWithShipping - discount);
+            }}
+          />
 
           <div className='block text-right leading-none ml-auto py-2'>
             <div className='flex gap-2 justify-between'>
               <p>ยอดรวมสินค้า:</p>
               <p>{formatNumber(getTotalAmount(priceId))}</p>
             </div>
+            {couponDiscount > 0 && (
+              <div className='flex gap-2 justify-between text-green-600'>
+                <p>ส่วนลดคูปอง:</p>
+                <p>-{formatNumber(couponDiscount)}</p>
+              </div>
+            )}
             <div className='flex gap-2 justify-between'>
               <p>ค่าจัดส่ง:</p>
               <p>{formatNumber(calculateShippingCost)}</p>
             </div>
-            <div className='flex gap-2 justify-between'>
+            <div className='flex gap-2 justify-between font-bold'>
               <p>ยอดรวมทั้งสิ้น:</p>
-              <p>{formatNumber(totalWithShipping)}</p>
+              <p>{formatNumber(netTotal)}</p>
             </div>
           </div>
 
@@ -378,7 +460,7 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
             onClick={handleCreateOrders}
             autoFocus
             variant='contained'
-            color='primary'
+            color='success'
             disabled={!canCheckout || isProcess || isCartEmpty}
           >
             {isProcess ? 'กำลังดำเนินการ...' : 'ยืนยันคำสั่งซื้อ'}

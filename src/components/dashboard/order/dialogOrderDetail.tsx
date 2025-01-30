@@ -35,7 +35,7 @@ const DialogOrderDetail = ({ order }: DialogOrderDetailProps) => {
         onClick={handleClickOpen}
         startIcon={<i className="tabler-eye" />}
       >
-        ดูรายละเอียด
+        รายละเอียด
       </Button>
 
       <Dialog
@@ -64,9 +64,16 @@ const DialogOrderDetail = ({ order }: DialogOrderDetailProps) => {
                   <div className="">วันที่สั่งซื้อ : {formatThaiDateTime(order.createdAt.toLocaleString())}</div>
 
                 </div>
-                <div>
-                  <div className="">หมายเลขคำสั่งซื้อ Zort : {order.zortoutId || '-'}</div>
 
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1  gap-4">
+              {/* ที่อยู่จัดส่ง */}
+              <div className="border rounded-lg p-4">
+                <div className="font-medium mb-2">รูปแบบการจัดส่ง</div>
+                <div className="text-sm leading-none p-2 border rounded-sm inline-block">
+                  {order.shippingMethod}
                 </div>
               </div>
             </div>
@@ -74,6 +81,8 @@ const DialogOrderDetail = ({ order }: DialogOrderDetailProps) => {
             <div className="grid grid-cols-1  gap-4">
               {/* ที่อยู่จัดส่ง */}
               <div className="border rounded-lg p-4">
+
+
                 <div className="font-medium mb-2">ที่อยู่จัดส่ง</div>
                 <div className="text-sm leading-none">
                   <div className='flex gap-2'>
@@ -162,7 +171,7 @@ const DialogOrderDetail = ({ order }: DialogOrderDetailProps) => {
         </DialogContent>
 
         <DialogActions className='dialog-actions-dense'>
-          <Button onClick={handleClose} variant="outlined">
+          <Button onClick={handleClose} variant="outlined" color='error' size='small'>
             ปิด
           </Button>
         </DialogActions>

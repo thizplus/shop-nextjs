@@ -23,7 +23,8 @@ const BtnCreateShipping: React.FC<BtnCreateShippingProps> = ({ onAddressAdded })
     district: '',
     amphoe: '',
     province: '',
-    zipcode: ''
+    zipcode: '',
+    location: ''
   });
 
   const handleClickOpen = () => setOpen(true);
@@ -159,6 +160,19 @@ const BtnCreateShipping: React.FC<BtnCreateShippingProps> = ({ onAddressAdded })
             value={newAddress.zipcode}
             onChange={handleInputChange}
           />
+
+          <TextField
+            margin="dense"
+            name="location"
+            label="ระบุตำแหน่ง"
+            type="text"
+            fullWidth
+            variant="outlined"
+            size='small'
+            value={newAddress.location}
+            onChange={handleInputChange}
+          />
+
         </DialogContent>
         <DialogActions className='dialog-actions-dense'>
           <Button

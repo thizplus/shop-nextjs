@@ -16,16 +16,19 @@ import useCategoryAll from '@/actions/backend/category/useCategoryAll';
 import useCategorySearch from '@/actions/backend/category/useCategorySearch';
 import type { TypesCategory } from "@/types/categoryTypes";
 import StatusSwitch from '@/components/dashboard/category/StatusSwitch';
+import EditCategoryDialog from './EditCategoryDialog';
+import CreateCategoryDialog from './CreateCategoryDialog';
 
 
 const columns: Column<TypesCategory>[] = [
-  { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
-  { id: 'name', numeric: false, disablePadding: false, label: 'Product Name' },
+  { id: 'catId', numeric: true, disablePadding: false, label: 'รหัส' },
+  { id: 'name', numeric: false, disablePadding: false, label: 'ชื่อ' },
+  { id: 'description', numeric: false, disablePadding: false, label: 'รายละเอียด' },
   {
     id: 'updatedAt',
     numeric: false,
     disablePadding: false,
-    label: 'Last Updated',
+    label: 'อัพเดท',
     format: (value: Date) => new Date(value).toLocaleString()
   },
 ];
@@ -36,7 +39,7 @@ const rowsPerPageOptions = [20, 50];
 const MainCategory = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[0]);
-  const [orderBy, setOrderBy] = useState<keyof TypesCategory>('id');
+  const [orderBy, setOrderBy] = useState<keyof TypesCategory>('catId');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -93,6 +96,8 @@ const MainCategory = () => {
     setPage(0);
   };
 
+
+
   const renderActions = (row: TypesCategory) => (
     <Box sx={{
       display: 'flex',
@@ -100,6 +105,7 @@ const MainCategory = () => {
       alignItems: 'center',
     }}>
       <StatusSwitch items={row} />
+      <EditCategoryDialog category={row} />
     </Box>
   );
 
@@ -121,6 +127,10 @@ const MainCategory = () => {
     <>
       <h1>หมวดหมู่สินค้า</h1>
       <div className="flex flex-wrap justify-between gap-2 mb-4">
+
+        <div className='flex gap-2 items-center'>
+          <CreateCategoryDialog />
+        </div>
 
         <div className='flex gap-2 items-center'>
           <TextField

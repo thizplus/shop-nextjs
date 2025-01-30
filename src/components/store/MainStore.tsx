@@ -11,14 +11,26 @@ import Loading from '../global/Loading';
 import Payment from '../global/header/payment';
 import { usePendingOrders } from '@/actions/backend/orders/usePendingOrders';
 
+import Slider from '../global/Slider';
+import FooterStore from '../global/footerStore';
+import PriceTicker from '../global/PriceTicker';
+import { usePin } from '@/actions/client/usePin';
+import PinDialog from '../global/PinDialog';
+
 
 const MainStore = () => {
   const { isLiffLoading, liffError } = useLiffAuth();
   const { user, isLoggedIn } = useClientStores();
   const { config, fetchConfig, loading: configLoading } = useConfigStore();
+  const [showPinDialog, setShowPinDialog] = useState(false);
+  const { handlePinSubmit, error, isVerifying, hasPin } = usePin(user?.userId);
+
+
 
   // State for payment dialog
   const [showPayment, setShowPayment] = useState(false);
+
+
 
   // Use pending orders hook
   const {
@@ -45,6 +57,23 @@ const MainStore = () => {
       setShowPayment(true);
     }
   }, [pendingOrder, isLoggedIn]);
+
+  useEffect(() => {
+    if (config?.displayConfig.isProtected && user && !user.isPinVerified) {
+      setShowPinDialog(true);
+    }
+  }, [config, user]);
+
+  const onPinSubmit = async (pin: string) => {
+    try {
+      await handlePinSubmit(pin);
+      setShowPinDialog(false);
+    } catch (error) {
+      // จัดการ error ถ้าต้องการ
+      console.error('PIN error:', error);
+    }
+  };
+
 
   // Handle payment dialog close
   const handlePaymentClose = useCallback(() => {
@@ -75,6 +104,9 @@ const MainStore = () => {
   return (
     <>
       <HeaderStore />
+
+      <Slider />
+      {config && <PriceTicker saleModel={config.saleModel} />}
       {config && <ProductList priceIds={config.saleModel.listPrice.map(price => price.id)} />}
 
       {/* Show Payment dialog for pending order */}
@@ -87,6 +119,16 @@ const MainStore = () => {
           onUpdatePayment={handlePaymentUpdate}
         />
       )}
+      <FooterStore />
+      <PinDialog
+        open={showPinDialog}
+        isProtected={config?.displayConfig.isProtected ?? false}
+        user={user}
+        onPinSubmit={onPinSubmit}
+        error={error}
+        isVerifying={isVerifying}
+        hasPin={hasPin}
+      />
     </>
   );
 };

@@ -19,9 +19,8 @@ export interface ShippingInfo {
   amphoe: string;
   province: string;
   zipcode: string;
+  location?: string;
   isDefault: boolean;
-
-  // เพิ่ม tracking fields
   trackingNo?: string;
   shippingChannel?: string;
   trackingUpdateAt?: string | Date;
@@ -40,20 +39,41 @@ export interface Payment {
   slip: PaymentSlip[];
 }
 
+export interface GrabPayment {
+  status: 'pending' | 'processing' | 'success';
+  amount: number;
+  note?: string;
+  updatedAt?: string | Date;
+  paymentAt?: string | Date;
+}
+
+export interface Coupon {
+  code: string;
+  type: 'cart' | 'shipping';
+  value: number;
+  isPercent: boolean;
+  discountAmount: number;
+}
+
 export type TypeOrder = {
   _id: ObjectId;
   orderId: string;
+  shopName?: string;
   typeOrder: string;
   typeId: string;
   userId: string;
   listProducts: OrderProduct[];
   shippingInfo: ShippingInfo;
+  shippingMethod: 'standard' | 'grab';
+  grabPayment?: GrabPayment;
   shippingCost: number;
+  subTotal: number;
   totalAmount: number;
   netTotal: number;
   expire: string | Date;
+  coupon?: Coupon;
+  discountAmount: number;
   payment: Payment;
-  zortoutId?: string;
   createdAt: string | Date;
   updatedAt: string | Date;
   __v: number;
@@ -65,3 +85,5 @@ export interface OrderResponse {
   totalPages: number;
   currentPage: number;
 }
+
+

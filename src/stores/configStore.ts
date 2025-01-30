@@ -1,59 +1,18 @@
 import { create } from 'zustand'
 
 import actionGetStoreConfig from '@/actions/backend/setting/getStoreConfig'
+import type { DisplayConfig, LineLoginConfig, LineMessageConfig, SaleModelConfig, ShippingCostConfig, SlipOKConfig, TelegramNotificationConfig } from '@/types/storeConfigTypes';
 
-interface LineLogin {
-  LINE_CHANNEL_ID: string;
-  LINE_CHANNEL_SECRET: string;
-}
 
-interface LineNotification {
-  LINE_NOTIFY_TOKEN: string;
-  NOTIFY_ENABLED: boolean;
-}
-
-interface LineMessage {
-  CHANNEL_ACCESS_TOKEN: string;
-  CHANNEL_SECRET: string;
-  MESSAGE_ENABLED: boolean;
-}
-
-interface SlipOK {
-  API_URL: string;
-  API_KEY: string;
-  ENABLED: boolean;
-  qr_image?: string;
-}
-
-interface ShippingCost {
-  standard: {
-    value: number;
-    cost: number;
-  };
-  special: {
-    value: number;
-  };
-}
-
-interface SaleModel {
-  minOrderStatus: boolean;
-  minOrderValue: number;
-  type: string;
-  listPrice: Array<{
-    id: string;
-    name: string;
-    minPurchase: number;
-    LIFF_ID: string;
-  }>;
-}
 
 interface StoreConfig {
-  lineLogin: LineLogin;
-  lineNotification: LineNotification;
-  lineMessage: LineMessage;
-  slipOK: SlipOK;
-  shippingCost: ShippingCost;
-  saleModel: SaleModel;
+  lineLogin: LineLoginConfig;
+  telegramNotification: TelegramNotificationConfig;
+  lineMessage: LineMessageConfig;
+  slipOK: SlipOKConfig;
+  saleModel: SaleModelConfig;
+  shippingCost: ShippingCostConfig;
+  displayConfig: DisplayConfig; // เพิ่มส่วนนี้
 }
 
 interface ConfigState {
@@ -68,15 +27,28 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   loading: false,
   error: null,
   fetchConfig: async () => {
-    // ถ้ามี config อยู่แล้วและไม่ได้กำลัง loading ให้ return เลย
     if (get().config && !get().loading) return;
 
     set({ loading: true });
 
     try {
-      const result = await actionGetStoreConfig();
+      const response = await actionGetStoreConfig();
 
-      set({ config: result, loading: false, error: null });
+
+      // แปลงข้อมูลให้ตรงกับ interface
+      const config: StoreConfig = {
+
+        lineLogin: response.lineLogin,
+        telegramNotification: response.telegramNotification,
+        lineMessage: response.lineMessage,
+        slipOK: response.slipOK,
+        saleModel: response.saleModel,
+        shippingCost: response.shippingCost,
+        displayConfig: response.displayConfig,
+
+      };
+
+      set({ config, loading: false, error: null });
     } catch (error) {
       console.error('Failed to fetch store config:', error);
       set({ error: 'Failed to fetch store config', loading: false });

@@ -3,9 +3,9 @@ import type { ObjectId } from "mongodb";
 
 export type TypesCategory = {
   _id: ObjectId;
-  id: number;
-  __v: number;
+  catId: string;
   name: string;
+  description: string;
   active: boolean;
   createdAt: Date;
   updatedAt: Date;

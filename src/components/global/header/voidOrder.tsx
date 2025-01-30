@@ -40,7 +40,7 @@ const BtnVoidOrder = ({ orderId, onVoidSuccess }: PropsBtnVoidOrder) => {
 
   return (
     <>
-      <Button onClick={handleClickOpen} color="error" variant='contained'>
+      <Button onClick={handleClickOpen} color="error" size='small' variant='contained'>
         ยกเลิกคำสั่งซื้อ
       </Button>
 

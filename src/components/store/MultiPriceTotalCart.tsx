@@ -17,15 +17,32 @@ import { useShippingStore } from '@/stores/shippingStore';
 import { formatNumber } from '@/components/global/functions/numberFormat';
 import ShippingInfo from '@/components/global/shipping/shippingInfo';
 import actionCreateOrder from '@/actions/backend/orders/actionOrder';
-import { sendLineNotification } from '@/actions/global/lineNotification';
-import { sendLineFlexMessage } from '@/actions/global/lineFlexMessage';
-import { sendOrderToZort } from '@/actions/zortout/actionZortout';
+
+//import { sendLineNotification } from '@/actions/global/lineNotification';
+//import { sendLineFlexMessage } from '@/actions/global/lineFlexMessage';
+
+import { sendOrderToWarehouse } from '@/actions/zortout/actionWarehouse';
 import type { TypeOrder } from '@/types/orderTypes';
 import Payment from '../global/header/payment';
 import { useMultiPriceUpdate } from '@/actions/store/useMultiPriceUpdate';
-import { checkZortStock } from '@/actions/backend/orders/checkZortStock';
+import { checkWarehouseStock } from '@/actions/backend/orders/checkWarehouseStock';
+import { useShippingMethodStore } from '@/stores/shippingMethodStore';
+
+import ShippingMethodSelector from '../global/shipping/ShippingMethodSelector';
+import { getClientDeliveryStatus } from '@/actions/client/clientDeliveryStatus';
+import CouponSection from '../global/coupon/CouponSection';
+import type { IClientCoupon } from '@/types/couponTypes';
 
 const MultiPriceTotalCart: React.FC = () => {
+
+
+  const { user } = useClientStores();
+  const { method } = useShippingMethodStore();
+
+  const [deliveryStatus, setDeliveryStatus] = useState<{ enableGrabDelivery: boolean }>({
+    enableGrabDelivery: false
+  });
+
   const {
     items,
     getTotalAmount,
@@ -45,6 +62,10 @@ const MultiPriceTotalCart: React.FC = () => {
   const [payment, setPayment] = useState<TypeOrder | undefined>(undefined);
   const [localTotalAmount, setLocalTotalAmount] = useState<number>(0);
   const [localBaseTotalCart, setLocalBaseTotalCart] = useState<number>(0);
+
+
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [selectedCoupon, setSelectedCoupon] = useState<IClientCoupon | null>(null);
 
   const [insufficientStock, setInsufficientStock] = useState<Array<{
     name: string;
@@ -74,11 +95,33 @@ const MultiPriceTotalCart: React.FC = () => {
   }, [config, fetchConfig]);
 
   useEffect(() => {
+    const fetchDeliveryStatus = async () => {
+      if (user?.userId) {
+        try {
+          const status = await getClientDeliveryStatus();
+
+          setDeliveryStatus(status);
+        } catch (error) {
+          console.error('Failed to fetch delivery status:', error);
+          setSnackbar({
+            open: true,
+            message: 'ไม่สามารถตรวจสอบสถานะการจัดส่งได้',
+            severity: 'error'
+          });
+        }
+      }
+    };
+
+    fetchDeliveryStatus();
+  }, [user?.userId]); // เพิ่ม dependency เป็น user?.userId
+
+  useEffect(() => {
     setLocalTotalAmount(getTotalAmount());
     setLocalBaseTotalCart(baseTotalCart);
-    console.log('Updated total amount:', getTotalAmount());
-    console.log('Updated base total cart:', baseTotalCart);
-    console.log('Applicable price ID:', getApplicablePrice());
+
+    //  console.log('Updated total amount:', getTotalAmount());
+    // console.log('Updated base total cart:', baseTotalCart);
+    //  console.log('Applicable price ID:', getApplicablePrice());
   }, [getTotalAmount, baseTotalCart, getApplicablePrice]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -129,6 +172,10 @@ const MultiPriceTotalCart: React.FC = () => {
   const filteredItems = useMemo(() => items.filter(item => item.qty > 0), [items]);
 
   const calculateShippingCost = useMemo(() => {
+    // ถ้าเลือก Grab ให้คืนค่า 0
+    if (method === 'grab') return 0;
+
+    // คำนวณค่าจัดส่งปกติ
     if (!config || !config.shippingCost || localTotalAmount === 0) return 0;
     const { standard, special } = config.shippingCost;
 
@@ -137,11 +184,21 @@ const MultiPriceTotalCart: React.FC = () => {
     } else {
       return Math.ceil(localTotalAmount / special.value);
     }
-  }, [config, localTotalAmount]);
+  }, [config, localTotalAmount, method]);
+
+  const priceDisplay = useMemo(() => {
+    if (!config?.saleModel.listPrice) return [];
+
+    // เรียงลำดับราคาตาม minPurchase
+    return [...config.saleModel.listPrice].sort((a, b) => a.minPurchase - b.minPurchase);
+  }, [config]);
 
   const totalWithShipping = useMemo(() => {
     return localTotalAmount + calculateShippingCost;
   }, [localTotalAmount, calculateShippingCost]);
+
+
+  const [netTotal, setNetTotal] = useState(totalWithShipping);
 
   const isCartEmpty = useMemo(() => {
     return localTotalAmount <= 0;
@@ -174,7 +231,7 @@ const MultiPriceTotalCart: React.FC = () => {
 
     try {
       // Check Zort stock first
-      const stockCheck = await checkZortStock(
+      const stockCheck = await checkWarehouseStock(
         filteredItems.map(item => ({
           sku: item.sku,
           qty: item.qty
@@ -206,7 +263,7 @@ const MultiPriceTotalCart: React.FC = () => {
       const expire = new Date(now.getTime() + 15 * 60000); // +15 นาที
 
       const orderData = {
-        orderId: `WB-${Date.now()}`,
+        orderId: `${process.env.NEXT_PUBLIC_SITE_CODE}-${Date.now()}`,
         typeOrder: 'store',
         typeId: 'store',
         userId: user.userId,
@@ -226,33 +283,44 @@ const MultiPriceTotalCart: React.FC = () => {
           amphoe: selectedAddress.amphoe,
           province: selectedAddress.province,
           zipcode: selectedAddress.zipcode,
+          location: selectedAddress.location,
           isDefault: selectedAddress.isDefault || false
         },
         shippingCost: calculateShippingCost,
-        totalAmount: localTotalAmount,
-        netTotal: totalWithShipping,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        shippingMethod: method,
+        subTotal: localBaseTotalCart,
+        totalAmount: localTotalAmount - couponDiscount,
+        netTotal: netTotal,
         expire: expire.toISOString(),
         payment: {
-          status: 'pending' as const,
+          status: 'pending',
           amount: 0,
           slip: []
-        }
+        },
+        discountAmount: couponDiscount,
+        coupon: selectedCoupon ? {
+          code: selectedCoupon.code,
+          type: selectedCoupon.type,
+          value: selectedCoupon.value,
+          isPercent: selectedCoupon.isPercent,
+          discountAmount: couponDiscount
+        } : undefined
       } as unknown as TypeOrder;
 
       actionCreateOrder(orderData);
 
-      await sendLineNotification(orderData);
-      await sendLineFlexMessage(orderData);
+      // await sendLineNotification(orderData);
+      // await sendLineFlexMessage(orderData);
 
-      const res = await sendOrderToZort(orderData);
+      const res = await sendOrderToWarehouse(orderData);
 
       setSnackbar({ open: true, message: 'สร้างคำสั่งซื้อสำเร็จ', severity: 'success' });
+
       handleClose();
 
       setPayment(res.orderData);
       clearCart();
+      console.log('orderData send payment:', res.orderData)
 
     } catch (error) {
       console.error('Failed to create order:', error);
@@ -288,6 +356,9 @@ const MultiPriceTotalCart: React.FC = () => {
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
+  const primaryColor = config?.displayConfig.primaryColor ? config?.displayConfig.primaryColor : '#000000'
+
+
 
 
   return (
@@ -298,7 +369,8 @@ const MultiPriceTotalCart: React.FC = () => {
           onClick={handleClickOpen}
           size='small'
           disabled={localTotalAmount <= 0}
-          className='flex gap-2'
+          className={`flex gap-2`}
+          style={{ background: primaryColor }}
         >
           <i className="tabler-shopping-bag text-[32px]"></i>
           <div className='block leading-none my-auto text-left'>
@@ -328,19 +400,24 @@ const MultiPriceTotalCart: React.FC = () => {
           </DialogContentText>
           <div className="mt-4">
             {filteredItems.map((item, index) => (
-              <div key={index} className="flex items-center mb-4 justify-between">
-                <div className="flex gap-2 items-center">
+              <div key={index} className="grid grid-cols-1 items-center mb-4 justify-between w-full">
+                <div className="grid items-center grid-cols-[100px_1fr] gap-2">
                   {item.imagepath && (
                     <img src={item.imagepath} alt={item.name} className="w-full max-w-[80px]" />
                   )}
                   <div className='leading-none'>
                     <p className="font-semibold text-sm">{item.name}</p>
                     <p className='text-xs'>
-                      ราคา VIP1: {formatNumber(item.prices['75A0M3VCO'])} บาท
-                      {applicablePriceId === '4IMCQUXD7' && ` | ราคา VIP2: ${formatNumber(item.prices['4IMCQUXD7'])} บาท`}
-                      | คงเหลือ: {item.availablestock}
+                      {priceDisplay.map((price, index) => (
+                        <React.Fragment key={price.id}>
+                          {`${price.name}: ${formatNumber(item.prices[price.id])}฿`}
+                          {index < priceDisplay.length - 1 && ' | '}
+                        </React.Fragment>
+                      ))}
+
                     </p>
-                    <div className='flex items-center justify-between'>
+                    <p className='text-xs'> {'คงเหลือ:'}{item.availablestock}</p>
+                    <div className='grid items-center grid-cols-[100px_1fr] gap-2'>
                       <div className='flex justify-between mt-2'>
                         <p onClick={() => handleQuantityChange(item.sku, item.qty - 1)} className='flex p-0 my-auto cursor-pointer'> <i className="tabler-minus"></i></p>
                         <TextField
@@ -351,13 +428,13 @@ const MultiPriceTotalCart: React.FC = () => {
                           inputProps={{
                             min: 0,
                             max: item.availablestock,
-                            className: 'p-0 text-center h-full p-1 w-[70px]'
+                            className: 'p-0 text-center h-full p-1 w-[50px]'
                           }}
                           size="small"
                         />
                         <p onClick={() => handleQuantityChange(item.sku, item.qty + 1)} className='flex p-0 my-auto cursor-pointer'> <i className="tabler-plus"></i></p>
                       </div>
-                      <p className="mt-4 text-sm text-right">
+                      <p className="mt-4 text-xs text-right">
                         รวม: {formatNumber((item.prices[applicablePriceId] || Object.values(item.prices)[0]) * item.qty)}
                       </p>
                     </div>
@@ -367,10 +444,23 @@ const MultiPriceTotalCart: React.FC = () => {
             ))}
           </div>
 
+          {deliveryStatus?.enableGrabDelivery && (
+            <ShippingMethodSelector
+              enableGrabDelivery={deliveryStatus.enableGrabDelivery}
+            />
+          )}
           <ShippingInfo />
 
-          <div className='block text-right leading-none ml-auto py-2'>
+          <CouponSection
+            totalAmount={localTotalAmount}
+            onApplyCoupon={(discount, coupon) => {
+              setCouponDiscount(discount);
+              setSelectedCoupon(coupon);
+              setNetTotal(totalWithShipping - discount);
+            }}
+          />
 
+          <div className='block text-sm text-right leading-none ml-auto py-2'>
             <div className='flex gap-2 justify-between'>
               <p>ยอดรวมสินค้า ({basePrice?.name}):</p>
               <p>{formatNumber(localBaseTotalCart)}</p>
@@ -379,13 +469,19 @@ const MultiPriceTotalCart: React.FC = () => {
               <p>ราคาของคุณ ({applicablePriceName}):</p>
               <p>{formatNumber(localTotalAmount)}</p>
             </div>
+            {couponDiscount > 0 && (
+              <div className='flex gap-2 justify-between text-green-600'>
+                <p>ส่วนลดคูปอง:</p>
+                <p>-{formatNumber(couponDiscount)}</p>
+              </div>
+            )}
             <div className='flex gap-2 justify-between'>
               <p>ค่าจัดส่ง:</p>
               <p>{formatNumber(calculateShippingCost)}</p>
             </div>
-            <div className='flex gap-2 justify-between'>
+            <div className='flex gap-2 justify-between font-bold'>
               <p>ยอดรวมทั้งสิ้น:</p>
-              <p>{formatNumber(totalWithShipping)}</p>
+              <p>{formatNumber(netTotal)}</p>
             </div>
           </div>
 
@@ -415,7 +511,7 @@ const MultiPriceTotalCart: React.FC = () => {
             onClick={handleCreateOrders}
             autoFocus
             variant='contained'
-            color='primary'
+            color='success'
             disabled={!canCheckout || isProcess || isCartEmpty}
           >
             {isProcess ? 'กำลังดำเนินการ...' : 'ยืนยันคำสั่งซื้อ'}
@@ -430,6 +526,7 @@ const MultiPriceTotalCart: React.FC = () => {
           onClose={handleCancelOrder}
           onOpen={true}
           onUpdatePayment={handleUpdatePayment}
+
         />
       )}
 

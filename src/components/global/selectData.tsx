@@ -4,10 +4,11 @@ import React, { useState, useCallback, useEffect } from 'react';
 import MenuItem from '@mui/material/MenuItem';
 
 import CustomTextField from '@core/components/mui/TextField';
-import type { TypePrice } from '@/types/priceTypes';
+import type { TypePriceList } from '@/types/priceListTypes';
+
 
 type propsSelectData = {
-  items: TypePrice[];
+  items: TypePriceList[];
   onChange?: (value: string) => void;
   value?: string;
 };
@@ -52,8 +53,8 @@ const SelectData: React.FC<propsSelectData> = ({ items, onChange, value: propVal
         <em>ไม่คัดลอก</em>
       </MenuItem>
       {items.map((item) => (
-        <MenuItem key={item._id} value={item._id}>
-          {item.name}
+        <MenuItem key={item._id.toString()} value={item._id.toString()}>
+          {item.priceName}
         </MenuItem>
       ))}
     </CustomTextField>

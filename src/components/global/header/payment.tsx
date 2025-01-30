@@ -1,17 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-
-import Alert from '@mui/material/Alert';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 
 import type { TypeOrder } from '@/types/orderTypes';
 import { formatNumber } from '@/components/global/functions/numberFormat';
 import UploadSlip from './uploadSlip';
 import BtnVoidOrder from './voidOrder';
+import { useCouponApply } from '@/actions/backend/coupons/useCouponApply';
 
 interface PaymentProps {
   paymentData: TypeOrder;
@@ -24,23 +19,42 @@ interface PaymentProps {
 const Payment: React.FC<PaymentProps> = ({ paymentData, onClose, onOpen, onUpdatePayment, qr }) => {
   const [isFullyPaid, setIsFullyPaid] = useState(false);
   const [currentPayment, setCurrentPayment] = useState(paymentData.payment);
+  const [isExpired, setIsExpired] = useState(false);
+  const { applyCoupon } = useCouponApply();
 
   useEffect(() => {
-    if (currentPayment.amount >= paymentData.netTotal) {
+    const handleFullyPaid = async () => {
+      if (currentPayment.amount >= paymentData.netTotal && paymentData.coupon) {
+        try {
+          await applyCoupon({
+            couponId: paymentData.coupon.code,
+            orderId: paymentData.orderId,
+            userId: paymentData.userId,
+            amount: paymentData.coupon.discountAmount
+          });
+        } catch (error) {
+          console.error('Error applying coupon:', error);
+        }
+      }
+
       setIsFullyPaid(true);
+    };
 
-      const timer = setTimeout(() => {
-        // onClose();
-      }, 3000);
-
-
-      return () => clearTimeout(timer);
+    if (currentPayment.amount >= paymentData.netTotal) {
+      handleFullyPaid();
     }
-  }, [currentPayment, paymentData.netTotal, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPayment, paymentData]);
 
-  const handleClose = () => {
-    onClose();
-  };
+  useEffect(() => {
+    const expireTime = new Date(paymentData.expire).getTime();
+
+    if (Date.now() >= expireTime) {
+      setIsExpired(true);
+      onClose();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentData.expire]);
 
   const handlePaymentUpdate = useCallback((newPayment: TypeOrder['payment']) => {
     setCurrentPayment(newPayment);
@@ -50,84 +64,87 @@ const Payment: React.FC<PaymentProps> = ({ paymentData, onClose, onOpen, onUpdat
   const remainingAmount = Math.max(0, paymentData.netTotal - currentPayment.amount);
 
   const handleVoidSuccess = () => {
-    onClose();  // Close the Payment dialog
+    onClose();
   };
 
   return (
     <Dialog
       open={onOpen}
       disableEscapeKeyDown
-      aria-labelledby='alert-dialog-title'
-      aria-describedby='alert-dialog-description'
-      onClose={(event, reason) => {
-        if (reason !== 'backdropClick') {
-          handleClose();
-        }
-      }}
       maxWidth="xs"
       fullWidth
+      onClose={(event, reason) => {
+        if (reason !== 'backdropClick') {
+          onClose();
+        }
+      }}
     >
       <DialogTitle>ชำระเงิน</DialogTitle>
       <DialogContent>
         <div className='block'>
-
-
-
-          <div className='grid grid-cols-2'>
-            <p>หมายเลขคำสั่งซื้อ:</p><p className='text-right font-bold'>{paymentData.orderId}</p>
-            <p color={isFullyPaid ? 'success.main' : 'warning.main'}>
-              สถานะการชำระเงิน:
-            </p><p className='text-right font-bold'>{isFullyPaid ? 'ชำระเงินครบแล้ว' : 'รอการชำระเงิน'}</p>
+          <div className='grid grid-cols-2 text-sm'>
+            <p>คำสั่งซื้อ:</p>
+            <p className='text-right font-bold'>{paymentData.orderId}</p>
+            <p>สถานะ:</p>
+            <p className='text-right font-bold'>
+              {isFullyPaid ? 'ชำระเงินครบแล้ว' : 'รอการชำระเงิน'}
+            </p>
           </div>
 
-          <div className='grid grid-cols-3 gap-2 p-2 border-dashed border rounded-sm mt-2'>
+          <div className='grid grid-cols-3 gap-1 pt-2 pb-1 border-dashed border rounded-sm mt-1'>
             <div className='block text-center leading-none'>
-              <p className='font-bold text-xl'>{formatNumber(paymentData.netTotal)}฿</p> <p>รวม</p>
+              <p className='font-bold text-md'>{formatNumber(paymentData.netTotal)}฿</p>
+              <p className='text-xs'>ยอดรวม</p>
             </div>
-
             <div className='block text-center leading-none text-green-600'>
-              <p className='font-bold text-xl '>{formatNumber(currentPayment.amount)}฿</p> <p>ชำระแล้ว</p>
+              <p className='font-bold text-md'>{formatNumber(currentPayment.amount)}฿</p>
+              <p className='text-xs'>ชำระแล้ว</p>
             </div>
             <div className='block text-center leading-none text-red-600'>
-              <p className='font-bold text-xl '>{formatNumber(remainingAmount)}฿</p><p>ค้างชำระ</p>
+              <p className='font-bold text-md'>{formatNumber(remainingAmount)}฿</p>
+              <p className='text-xs'>ค้างชำระ</p>
             </div>
           </div>
-
-
-
-
         </div>
 
-        {!isFullyPaid && (
+        {!isFullyPaid && !isExpired && (
           <UploadSlip
             order={paymentData}
             onPaymentUpdate={handlePaymentUpdate}
             currentPayment={currentPayment}
+            onExpire={() => {
+              setIsExpired(true);
+              onClose();
+            }}
           />
         )}
 
-        {qr &&
+        {qr && !isExpired && (
           <div className='mb-2'>
-            <p className='text-center'>กรุณาชำระเงินที่บัญชีด้านล่างและแนบสลิป</p>
-            <p className='text-center text-sm text-error'>หากสลิปของคุณไม่มี QR CODE ระบบจะไม่สามารถตรวจสอบยอดได้ กรุณาส่งหลักฐานให้แอดมินยืนยันในแชท</p>
-            <img src={qr} alt='' className=' w-full' />
+            <img src={qr} alt='QR Payment' className='w-full' />
           </div>
-        }
+        )}
 
         {isFullyPaid && (
-          <Alert severity='success' className='mt-4'>การชำระเงินของคุณเสร็จสมบูรณ์</Alert>
+          <Alert severity='success' variant='filled' className='mt-4'>
+            การชำระเงินเสร็จสมบูรณ์
+          </Alert>
+        )}
 
+        {isExpired && !isFullyPaid && (
+          <Alert severity='error' variant='filled' className='mt-4'>
+            หมดเวลาชำระเงิน กรุณาสร้างคำสั่งซื้อใหม่
+          </Alert>
         )}
       </DialogContent>
       <DialogActions>
         {!isFullyPaid ? (
           <BtnVoidOrder orderId={paymentData.orderId} onVoidSuccess={handleVoidSuccess} />
         ) : (
-          <Button onClick={handleClose} color="error" variant='outlined'>
-            ปิด
+          <Button onClick={onClose} color="error" size='small' variant='outlined'>
+            ปิดหน้าจอ
           </Button>
         )}
-
       </DialogActions>
     </Dialog>
   );

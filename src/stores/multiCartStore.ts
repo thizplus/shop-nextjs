@@ -80,7 +80,11 @@ export const useMultiPriceCartStore = create(
       getApplicablePrice: () => {
         const config = useConfigStore.getState().config;
 
-        if (!config) return '';
+        if (!config?.saleModel?.listPrice?.length) {
+          return ''; // ถ้าไม่มีข้อมูล return ค่าว่าง
+        }
+
+
 
         const { listPrice } = config.saleModel;
         const sortedPrices = [...listPrice].sort((a, b) => b.minPurchase - a.minPurchase);
@@ -89,7 +93,7 @@ export const useMultiPriceCartStore = create(
         const applicablePrice = sortedPrices.find(price => baseTotalCart >= price.minPurchase);
         const result = applicablePrice ? applicablePrice.id : sortedPrices[sortedPrices.length - 1].id;
 
-        console.log('getApplicablePrice - Base Total:', baseTotalCart, 'Applicable Price:', result);
+        // console.log('getApplicablePrice - Base Total:', baseTotalCart, 'Applicable Price:', result);
 
         return result;
       },
@@ -105,7 +109,7 @@ export const useMultiPriceCartStore = create(
           return sum + (price * item.qty);
         }, 0);
 
-        console.log('getTotalAmount - Calculated Total:', totalAmount);
+        // console.log('getTotalAmount - Calculated Total:', totalAmount);
 
         return totalAmount;
       },
@@ -172,7 +176,7 @@ export const useMultiPriceCartStore = create(
           return sum + (price * item.qty);
         }, 0);
 
-        console.log('recalculateBaseTotalCart - New Base Total:', newBaseTotalCart);
+        // console.log('recalculateBaseTotalCart - New Base Total:', newBaseTotalCart);
         set({ baseTotalCart: newBaseTotalCart });
 
         return newBaseTotalCart;

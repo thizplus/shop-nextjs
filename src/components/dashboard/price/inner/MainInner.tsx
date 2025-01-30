@@ -13,18 +13,19 @@ import type { TypesProductInner } from '@/types/productTypes';
 import BtnBack from '@/components/global/btnBack';
 import BtnUploadCSV from '@/components/dashboard/price/inner/btnUpload';
 import BtnUpdate from '@/components/dashboard/price/inner/btnUpdate';
-import { PriceUsersManager } from '@/components/dashboard/price/PriceUsersManager';
+
+//import { PriceUsersManager } from '@/components/dashboard/price/PriceUsersManager';
 import { LiffIdManager } from '@/components/dashboard/price/LiffIdManager';
 
 
 
 const columns: Column<TypesProductInner>[] = [
-  { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
+
   { id: 'sku', numeric: false, disablePadding: false, label: 'SKU' },
-  { id: 'name', numeric: false, disablePadding: false, label: 'Product Name' },
-  { id: 'price', numeric: true, disablePadding: false, label: 'Price' },
-  { id: 'stock', numeric: true, disablePadding: false, label: 'Stock' },
-  { id: 'availablestock', numeric: true, disablePadding: false, label: 'Available Stock' },
+  { id: 'name', numeric: false, disablePadding: false, label: 'ชื่อ' },
+  { id: 'price', numeric: true, disablePadding: false, label: 'ราคา' },
+  { id: 'stock', numeric: true, disablePadding: false, label: 'คงเหลือ' },
+  { id: 'availablestock', numeric: true, disablePadding: false, label: 'พร้อมขาย' },
 ];
 
 const rowsPerPageOptions = [20, 50];
@@ -159,11 +160,7 @@ const MainInner = ({ params }: PropsMainInner) => {
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4">
-        <PriceUsersManager
-          priceId={data.priceId}
-          priceName={data.priceName}
-          initialUsers={data.allowedUsers}
-        />
+
         <LiffIdManager
           priceId={data.priceId}
           priceName={data.priceName}

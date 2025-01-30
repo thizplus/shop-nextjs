@@ -1,8 +1,8 @@
 import type { TypeOrder } from '@/types/orderTypes';
 
-export const sendOrderToZort = async (orderData: TypeOrder) => {
+export const sendOrderToWarehouse = async (orderData: TypeOrder) => {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/zort/send-order`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/warehouse/send-order`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

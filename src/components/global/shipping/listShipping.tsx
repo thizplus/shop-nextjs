@@ -81,8 +81,8 @@ const ListsShipping: React.FC = () => {
 
   return (
     <>
-      <p className="underline cursor-pointer flex" onClick={handleClickOpen}>
-        <i className='tabler-truck-delivery' /> ตั้งค่าการจัดส่ง
+      <p className="underline text-sm cursor-pointer flex" onClick={handleClickOpen}>
+        <i className='tabler-truck-delivery text-lg mr-1' /> ตั้งค่าการจัดส่ง
       </p>
 
       <Dialog
@@ -125,6 +125,9 @@ const ListsShipping: React.FC = () => {
                         <div className='leading-none my-auto'>
                           <p className='text-bold flex gap-2 font-bold text-sm leading-none'> {address.cusName} {address.cusTel}</p>
                           <p className='leading-none text-sm'>{`${address.addressNo} ${address.district} ${address.amphoe} ${address.province} ${address.zipcode}`}</p>
+                          {address.location &&
+                            <p className='text-bold flex gap-2 font-bold text-sm leading-none'>ตำแหน่ง : {address.location}</p>
+                          }
                         </div>
                       </div>
                       <div className='flex gap-2 mt-2'>
@@ -140,8 +143,8 @@ const ListsShipping: React.FC = () => {
           <BtnCreateShipping onAddressAdded={fetchAddresses} />
         </DialogContent>
         <DialogActions className='dialog-actions-dense'>
-          <Button onClick={handleChoose} variant="contained" color="primary">ใช้ที่อยู่นี้</Button>
-          <Button onClick={handleClose}>ยกเลิก</Button>
+          <Button onClick={handleChoose} variant="contained" size='small' color="primary">ใช้ที่อยู่นี้</Button>
+          <Button onClick={handleClose} size='small'>ยกเลิก</Button>
         </DialogActions>
       </Dialog>
     </>

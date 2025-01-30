@@ -1,17 +1,17 @@
-// @/actions/zortout/checkZortStock.ts
+// @/actions/zortout/checkWarehouseStock.ts
 
-interface ZortProduct {
+interface StockProduct {
   sku: string;
   availablestock: string;
   name: string;
 }
 
-interface ZortResponse {
+interface StockResponse {
   res: {
     resCode: string;
     resDesc: string;
   };
-  list: ZortProduct[];
+  list: StockProduct[];
 }
 
 interface StockCheckResult {
@@ -25,45 +25,45 @@ interface StockCheckResult {
   error?: string;
 }
 
-export const checkZortStock = async (
+export const checkWarehouseStock = async (
   cartItems: Array<{ sku: string; qty: number }>
 ): Promise<StockCheckResult> => {
   try {
     const skuList = cartItems.map(item => item.sku).join(',');
 
-    const myHeaders = new Headers();
+    // const myHeaders = new Headers();
 
-    myHeaders.append("storename", process.env.NEXT_PUBLIC_ZORT_STORENAME || '');
-    myHeaders.append("apikey", process.env.NEXT_PUBLIC_ZORT_APIKEY || '');
-    myHeaders.append("apisecret", process.env.NEXT_PUBLIC_ZORT_APISECRET || '');
-    myHeaders.append("skulist", skuList);
-
-    const response = await fetch("https://open-api.zortout.com/v4/Product/GetProducts", {
+    // ใช้ STORE URL และ credentials แทน
+    const response = await fetch(`${process.env.NEXT_PUBLIC_STORE_URL}/api/products/check-stock`, {
       method: "GET",
-      headers: myHeaders,
+      headers: {
+        "Content-Type": "application/json",
+        "skulist": skuList
+      },
       redirect: "follow"
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch stock information from Zort');
+      throw new Error('Failed to fetch stock information from store');
     }
 
-    const data = await response.json() as ZortResponse;
+    const data = await response.json() as StockResponse;
 
     if (data.res.resCode !== "200") {
       throw new Error(data.res.resDesc || 'Error checking stock availability');
     }
 
-    const zortProducts = new Map(
+    // ส่วนที่เหลือคงเดิม เพราะ format ข้อมูลเหมือนกัน
+    const storeProducts = new Map(
       data.list.map(product => [product.sku, product])
     );
 
     const insufficientItems: StockCheckResult['insufficientItems'] = [];
 
     cartItems.forEach(cartItem => {
-      const zortProduct = zortProducts.get(cartItem.sku);
+      const storeProduct = storeProducts.get(cartItem.sku);
 
-      if (!zortProduct) {
+      if (!storeProduct) {
         insufficientItems.push({
           sku: cartItem.sku,
           requested: cartItem.qty,
@@ -74,14 +74,14 @@ export const checkZortStock = async (
         return;
       }
 
-      const availableStock = parseInt(zortProduct.availablestock);
+      const availableStock = parseInt(storeProduct.availablestock);
 
       if (cartItem.qty > availableStock) {
         insufficientItems.push({
           sku: cartItem.sku,
           requested: cartItem.qty,
           available: availableStock,
-          name: zortProduct.name
+          name: storeProduct.name
         });
       }
     });
@@ -92,7 +92,7 @@ export const checkZortStock = async (
     };
 
   } catch (error) {
-    console.error('Error checking Zort stock:', error);
+    console.error('Error checking store stock:', error);
 
     return {
       success: false,

@@ -74,8 +74,8 @@ export const useLiffAuth = (priceId?: string) => {
           idType: priceId || 'store'
         };
 
-        console.log('Verifying with profile:', userProfile);
-        console.log('Access Token:', accessToken);
+        //  console.log('Verifying with profile:', userProfile);
+        // console.log('Access Token:', accessToken);
 
         // ส่ง request ไปยัง backend
         const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/line/verify`, {
@@ -95,7 +95,7 @@ export const useLiffAuth = (priceId?: string) => {
 
         const updatedProfile = await response.json();
 
-        console.log('Backend verification successful:', updatedProfile);
+        // console.log('Backend verification successful:', updatedProfile);
 
         setUser(updatedProfile);
         setLoggedIn(true);

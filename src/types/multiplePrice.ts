@@ -1,27 +1,21 @@
 import type { ObjectId } from "mongodb";
 
-export type MultiPrice = {
+export interface MultiPrice {
   priceId: string;
   priceName: string;
   price: number;
-  updatedAt: Date;
+  status: boolean;
 }
 
-export type MultiPriceProduct = {
+export interface MultiPriceProduct {
   _id: ObjectId;
-  id: number;
-  __v: number;
   name: string;
   sku: string;
   stock: number;
   availablestock: number;
   imagepath: string | null;
-  categoryid: number | null;
-  category: string | null;
   prices: MultiPrice[];
   active: boolean;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export type MultiPriceProductInner = {

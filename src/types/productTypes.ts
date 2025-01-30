@@ -2,7 +2,6 @@
 import type { ObjectId } from "mongodb";
 
 
-
 export interface IListPrice {
   _id?: string; // optional เพราะอาจจะเป็นข้อมูลใหม่
   priceId: string;
@@ -10,6 +9,12 @@ export interface IListPrice {
   price: number;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+
+export interface ICategory {
+  catId: string;
+  name: string;
 }
 
 export interface TypesProduct {
@@ -21,12 +26,19 @@ export interface TypesProduct {
   stock: number;
   availablestock: number;
   imagepath: string | null;
-  categoryid: number | null;
-  category: string | null;
+  categories: ICategory[];
   active: boolean;
+  listPrice?: IListPrice[];
   createdAt: Date;
   updatedAt: Date;
-  listPrice?: IListPrice[]; // เพิ่ม type annotation ที่ชัดเจน
+}
+
+// interfaces สำหรับ API requests
+export interface CreateProductData {
+  name: string;
+  sku: string;
+  categories: ICategory[];  // เปลี่ยนเป็น array ของ ICategory
+  imagepath: string | null;
 }
 
 // Type สำหรับ API Response
@@ -47,7 +59,7 @@ export interface UpdatePricePayload {
 
 
 export type TypesProductInner = {
-  id: string;
+
   sku: string;
   name: string;
   price: number;
@@ -59,7 +71,6 @@ export type TypesProductInner = {
 
 export type TypesProductWholesale = {
   _id: ObjectId;
-  id: number;
   __v: number;
   name: string;
   sku: string;
@@ -68,7 +79,7 @@ export type TypesProductWholesale = {
   imagepath: string | null;
   categoryid: number | null;
   category: string | null;
-  price: number | null;
+  price: number;
   active: boolean;
   createdAt: Date;
   updatedAt: Date;

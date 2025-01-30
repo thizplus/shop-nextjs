@@ -4,7 +4,7 @@ import { useState } from 'react'
 // MUI Imports
 import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
+
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 
@@ -46,7 +46,9 @@ const OrderDetail = ({ order }: propsOrderDetail) => {
           }
         }}
       >
-        <DialogTitle id='alert-dialog-title'>คำสั่งซื้อ #{order.orderId}</DialogTitle>
+        <div className='px-6 pt-4'>
+          <p className='text-md'>คำสั่งซื้อ # <span className='font-bold'>{order.orderId}</span></p>
+        </div>
         <DialogContent>
           <p className={`text-md font-bold leading-none ${getStatusColor(order.payment.status)}`}>{order.payment.status}</p>
 
@@ -70,8 +72,8 @@ const OrderDetail = ({ order }: propsOrderDetail) => {
 
           <div className='py-2 border-b-[1px]'>
             <p>ที่อยู่จัดจัดส่ง: </p>
-            <div className=" leading-none flex gap-2">
-              <i className='tabler-map-pin text-[32px] my-auto' />
+            <div className=" leading-none flex gap-3">
+              <i className='tabler-map-pin text-[64px] my-auto' />
 
               <div className='leading-none my-auto'>
                 <p className='text-bold flex gap-2 font-bold text-sm leading-none'>
@@ -84,6 +86,10 @@ const OrderDetail = ({ order }: propsOrderDetail) => {
                   ${order.shippingInfo.amphoe}
                   ${order.shippingInfo.province}
                   ${order.shippingInfo.zipcode}`}
+                </p>
+
+                <p className='text-bold flex gap-2 font-bold text-sm leading-none'>
+                  {`${order.shippingInfo.location} `}
                 </p>
               </div>
             </div>

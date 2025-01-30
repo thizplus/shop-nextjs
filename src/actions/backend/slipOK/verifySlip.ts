@@ -1,6 +1,7 @@
 import { useConfigStore } from '@/stores/configStore';
 import actionUpdatePaymentStatus from '../orders/actionUpdatePeyment';
-import actionUpdatePaymentToZort from '@/actions/zortout/actionUpdatePaymentToZort';
+
+//import actionUpdatePaymentToZort from '@/actions/zortout/actionUpdatePaymentToZort';
 
 interface VerifySlipParams {
   file: File;
@@ -86,11 +87,13 @@ const actionVerifySlip = async ({ file, amount, orderId }: VerifySlipParams): Pr
         verifyResult
       });
 
-      await actionUpdatePaymentToZort({
-        orderId,
-        paymentamount: verifyResult.data.amount,
-        paymentmethod: 'โอนเงิน'
-      });
+      /*
+            await actionUpdatePaymentToZort({
+              orderId,
+              paymentamount: verifyResult.data.amount,
+              paymentmethod: 'โอนเงิน'
+            });
+      */
 
       return {
         status: 'success',

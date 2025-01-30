@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import type { TypePrice } from "@/types/priceTypes";
 
+
+
 interface PaginatedPriceResponse {
   items: TypePrice[];
   totalItems: number;

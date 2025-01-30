@@ -13,7 +13,7 @@ interface VoidOrderResponse {
 
 const actionVoidOrder = async ({ orderId }: VoidOrderParams): Promise<VoidOrderResponse> => {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/zort/void-order`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/warehouse/void-order`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

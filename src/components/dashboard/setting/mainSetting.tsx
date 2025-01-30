@@ -23,13 +23,17 @@ import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 
+
 import useStoreConfig from '@/actions/backend/setting/useStoreConfig'
 import usePriceAll from '@/actions/backend/price/usePriceAll'
-import type { StoreConfig, ListPrice, LineNotificationConfig, SlipOKConfig, LineMessageConfig } from '@/types/storeConfigTypes'
+import type { StoreConfig, ListPrice, SlipOKConfig, LineMessageConfig, DisplayConfig, TelegramNotificationConfig } from '@/types/storeConfigTypes'
 import actionUpdateConfig from '@/actions/backend/setting/updateStoreConfig'
 import { formatNumber } from '@/components/global/functions/numberFormat'
-import type { TypePrice } from '@/types/priceTypes'
+import type { TypePriceList } from '@/types/priceListTypes'
 import FileUpload from './fileUpload'
+import SliderSection from './SliderSection'
+import ColorPickerButton from './ColorPickerButton'
+
 
 const MainSetting = () => {
   const queryClient = useQueryClient();
@@ -39,6 +43,9 @@ const MainSetting = () => {
   const [config, setConfig] = useState<StoreConfig | undefined>(undefined);
   const [isProcess, setIsProcess] = useState<boolean>(false);
   const [qrFile, setQrFile] = useState<File | null>(null);
+
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [sliderFiles, setSliderFiles] = useState<File[]>([]);
 
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -68,12 +75,12 @@ const MainSetting = () => {
     });
   };
 
-  const handleLineNotificationChange = (field: keyof LineNotificationConfig, value: any) => {
+  const handleTelegramNotificationChange = (field: keyof TelegramNotificationConfig, value: any) => {
     if (!config) return;
     setConfig({
       ...config,
-      lineNotification: {
-        ...config.lineNotification,
+      telegramNotification: {
+        ...config.telegramNotification,
         [field]: value,
       },
     });
@@ -110,20 +117,58 @@ const MainSetting = () => {
 
     setIsProcess(true);
 
+    // เพิ่ม log เพื่อดูค่า config ทั้งหมด
+    console.log('Current config state:', {
+      fullConfig: config,
+      displayConfig: config.displayConfig,
+      sliders: config.displayConfig.sliders,
+      sliderFiles,
+    });
+
     const updatedConfig = {
       ...config,
       saleModel: {
         ...config.saleModel,
         minOrderStatus: config.saleModel.minOrderStatus ?? false,
         minOrderValue: config.saleModel.minOrderValue ?? 0,
+      },
+      displayConfig: {
+        ...config.displayConfig,
+
+        // ทำให้แน่ใจว่า sliders array ไม่เป็น undefined
+        sliders: config.displayConfig.sliders || []
       }
     };
 
     try {
-      await actionUpdateConfig({ config: updatedConfig, qrFile });
-      setSnackbar({ open: true, message: 'Configuration updated successfully', severity: 'success' });
-      queryClient.invalidateQueries({ queryKey: ['StoreConfig'] });
+      const result = await actionUpdateConfig({
+        config: updatedConfig,
+        qrFile,
+        logoFile,
+        sliderFiles
+      });
+
+      console.log('Update successful:', {
+        resultSliders: result.displayConfig?.sliders
+      });
+
+      setSnackbar({
+        open: true,
+        message: 'Configuration updated successfully',
+        severity: 'success'
+      });
+
+      // รอให้ข้อมูลถูกบันทึกเสร็จก่อนจึงค่อย invalidate
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Invalidate and wait for new data
+      await queryClient.invalidateQueries({ queryKey: ['StoreConfig'] });
+
+      // รีเซ็ต sliderFiles หลังจากอัพเดทสำเร็จ
+      setSliderFiles([]);
+
     } catch (error) {
+      console.error('Error in handleUpdate:', error);
       setSnackbar({
         open: true,
         message: error instanceof Error ? error.message : 'Failed to update configuration',
@@ -178,27 +223,32 @@ const MainSetting = () => {
   };
 
   const handlePriceChange = (index: number, field: keyof ListPrice, value: any) => {
-    if (config) {
-      const newPrices = [...config.saleModel.listPrice];
+    if (!config || !priceData) return;
 
-      newPrices[index] = { ...newPrices[index], [field]: value };
+    const newPrices = [...config.saleModel.listPrice];
 
-      if (field === 'id') {
-        const selectedPrice = priceData?.items.find((price: TypePrice) => price._id === value);
+    if (field === 'id') {
+      const selectedPrice = priceData.items.find((price: TypePriceList) => price.priceId === value);
 
-        if (selectedPrice) {
-          newPrices[index].name = selectedPrice.name;
-        }
-      }
-
-      setConfig({
-        ...config,
-        saleModel: {
-          ...config.saleModel,
-          listPrice: newPrices
-        }
-      });
+      newPrices[index] = {
+        ...newPrices[index],
+        id: value,
+        name: selectedPrice ? selectedPrice.priceName : ''
+      };
+    } else {
+      newPrices[index] = {
+        ...newPrices[index],
+        [field]: Array.isArray(value) ? value : value
+      };
     }
+
+    setConfig({
+      ...config,
+      saleModel: {
+        ...config.saleModel,
+        listPrice: newPrices
+      }
+    });
   };
 
   const handleSaleModelChange = (field: keyof StoreConfig['saleModel'], value: any) => {
@@ -212,6 +262,89 @@ const MainSetting = () => {
       },
     });
   };
+
+
+
+  // ใน MainSetting component เพิ่ม function handlers
+  const handleDisplayConfigChange = (field: keyof DisplayConfig, value: any) => {
+    if (!config) return;
+    setConfig({
+      ...config,
+      displayConfig: {
+        ...config.displayConfig,
+        [field]: value,
+      },
+    });
+  };
+
+  const handleLogoUpload = (file: File | null) => {
+    setLogoFile(file);
+  };
+
+  const handleAddSlider = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!config || !event.target.files) return;
+
+    const filesArray = Array.from(event.target.files);
+
+    setSliderFiles(filesArray);
+
+    const previewUrls = filesArray.map(file => URL.createObjectURL(file));
+
+    const newSliders = filesArray.map((_, index) => ({
+      id: `temp-${Date.now()}-${index}`,
+      url: previewUrls[index],
+      isTemp: true
+    }));
+
+    setConfig({
+      ...config,
+      displayConfig: {
+        ...config.displayConfig,
+        sliders: [...config.displayConfig.sliders, ...newSliders]
+      }
+    });
+  };
+
+  const handleRemoveSlider = async (id: string) => {
+    if (!config) return;
+
+    // Log ก่อนลบ
+    console.log('Before removing slider:', {
+      id,
+      currentSliders: config.displayConfig.sliders,
+      sliderFilesCount: sliderFiles.length
+    });
+
+    // หา index ของ slider ที่จะลบ
+    const sliderIndex = config.displayConfig.sliders.findIndex(
+      slider => slider.id === id
+    );
+
+    // สร้าง sliders array ใหม่โดยไม่รวม slider ที่ต้องการลบ
+    const newSliders = config.displayConfig.sliders.filter(slider => slider.id !== id);
+
+    // อัพเดท config ด้วย sliders ใหม่
+    setConfig({
+      ...config,
+      displayConfig: {
+        ...config.displayConfig,
+        sliders: newSliders
+      }
+    });
+
+    // อัพเดท sliderFiles โดยลบไฟล์ที่ตำแหน่งเดียวกับ slider ที่ถูกลบ
+    if (sliderIndex !== -1 && sliderFiles.length > 0) {
+      const newSliderFiles = sliderFiles.filter((_, index) => index !== sliderIndex);
+
+      setSliderFiles(newSliderFiles);
+    }
+
+    // เรียก handleUpdate เพื่อบันทึกการเปลี่ยนแปลง
+    // await handleUpdate();
+  };
+
+
+
 
   if (configStatus === 'pending' || priceStatus === 'pending') {
     return (
@@ -240,11 +373,12 @@ const MainSetting = () => {
       <TabContext value={value}>
         <TabList onChange={handleChange} aria-label='store configuration tabs'>
           <Tab value='1' label='LINE LOGIN' />
-          <Tab value='2' label='LINE NOTIFICATION' />
+          <Tab value='2' label='TELEGRAM NOTIFICATION' />
           <Tab value='3' label='LINE MESSAGE' />
           <Tab value='4' label='SLIP OK' />
           <Tab value='5' label='รูปแบบการขาย' />
           <Tab value='6' label='ค่าจัดส่ง' />
+          <Tab value="7" label="การแสดงผล" />
         </TabList>
 
         {/* Line Login Config */}
@@ -267,27 +401,39 @@ const MainSetting = () => {
 
         {/* Line Notification */}
         <TabPanel value='2' className='max-w-xs'>
-          <Typography variant="h6" className='mb-4'>LINE NOTIFICATION Configuration</Typography>
+          <Typography variant="h6" className='mb-4'>TELEGRAM Configuration</Typography>
           <FormControlLabel
             control={
               <Switch
-                checked={config.lineNotification?.NOTIFY_ENABLED || false}
-                onChange={(e) => handleLineNotificationChange('NOTIFY_ENABLED', e.target.checked)}
+                checked={config.telegramNotification?.TELEGRAM_ENABLED || false}
+                onChange={(e) => handleTelegramNotificationChange('TELEGRAM_ENABLED', e.target.checked)}
                 color="primary"
               />
             }
-            label="เปิดใช้งานการแจ้งเตือน LINE"
+            label="เปิดใช้งานการแจ้งเตือน TELEGRAM"
             className='mb-4'
           />
           <TextField
-            label="LINE NOTIFY TOKEN"
+            label="TELEGRAM BOT TOKEN"
             variant="outlined"
             fullWidth
             size="small"
-            value={config.lineNotification?.LINE_NOTIFY_TOKEN || ''}
-            onChange={(e) => handleLineNotificationChange('LINE_NOTIFY_TOKEN', e.target.value)}
-            disabled={!config.lineNotification?.NOTIFY_ENABLED}
+            value={config.telegramNotification?.TELEGRAM_BOT_TOKEN || ''}
+            onChange={(e) => handleTelegramNotificationChange('TELEGRAM_BOT_TOKEN', e.target.value)}
+            disabled={!config.telegramNotification?.TELEGRAM_ENABLED}
+            className='mb-4'
           />
+
+          <TextField
+            label="TELEGRAM CHAT ID"
+            variant="outlined"
+            fullWidth
+            size="small"
+            value={config.telegramNotification?.TELEGRAM_CHAT_ID || ''}
+            onChange={(e) => handleTelegramNotificationChange('TELEGRAM_CHAT_ID', e.target.value)}
+            disabled={!config.telegramNotification?.TELEGRAM_ENABLED}
+          />
+
         </TabPanel>
 
         {/* Line Message Config */}
@@ -341,10 +487,12 @@ const MainSetting = () => {
           />
 
           <div className="mb-4">
-            <Typography variant="subtitle2" className='mb-2'>QR Code Image</Typography>
+            <Typography variant="subtitle2" className="mb-2">QR Code Image</Typography>
             <FileUpload
               onFileSelected={setQrFile}
               currentImageUrl={config.slipOK?.qr_image}
+              height={250}
+              placeholderText="แนบภาพ QR สำหรับให้ลูกค้าโอนเงินที่นี่..."
             />
           </div>
 
@@ -415,9 +563,9 @@ const MainSetting = () => {
               fullWidth
               size='small'
             >
-              {priceData.items.map((price: TypePrice) => (
-                <MenuItem key={price._id} value={price._id}>
-                  {price.name}
+              {priceData.items.map((price: TypePriceList) => (
+                <MenuItem key={price._id.toString()} value={price.priceId}>
+                  {price.priceName}
                 </MenuItem>
               ))}
             </Select>
@@ -431,9 +579,9 @@ const MainSetting = () => {
                     style={{ marginRight: '10px', flexGrow: 1 }}
                     size='small'
                   >
-                    {priceData.items.map((priceItem: TypePrice) => (
-                      <MenuItem key={priceItem._id} value={priceItem._id}>
-                        {priceItem.name}
+                    {priceData.items.map((priceItem: TypePriceList) => (
+                      <MenuItem key={priceItem._id.toString()} value={priceItem.priceId}>
+                        {priceItem.priceName}
                       </MenuItem>
                     ))}
                   </Select>
@@ -503,6 +651,78 @@ const MainSetting = () => {
             </>
           )}
         </TabPanel>
+
+
+        {/* Display Settings TabPanel */}
+        <TabPanel value="7" className="max-w-xl">
+          <Typography variant="h6" className="mb-4">ตั้งค่าการแสดงผล</Typography>
+
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={config.displayConfig.isProtected}
+                onChange={(e) => handleDisplayConfigChange('isProtected', e.target.checked)}
+                color="primary"
+              />
+            }
+            label="เปิดใช้งานระบบป้องกันหน้าเว็บไซต์"
+          />
+          {/* Logo Upload */}
+          <div className="mb-6 max-w-[250px]">
+            <Typography variant="subtitle1" className="mb-2">โลโก้ร้าน</Typography>
+            <FileUpload
+              onFileSelected={handleLogoUpload}
+              currentImageUrl={config.displayConfig.logo}
+              height={200}
+              placeholderText="อัพโหลดโลโก้ร้านของคุณที่นี่..."
+            />
+          </div>
+
+          {/* Slider Images */}
+          <div className="mb-6">
+            <Typography variant="subtitle1" className="mb-2">รูปภาพสไลด์</Typography>
+            <SliderSection
+              sliders={config.displayConfig.sliders}
+              onRemove={handleRemoveSlider}
+              onAdd={handleAddSlider}
+            />
+          </div>
+
+          {/* Primary Color */}
+          <div className="mb-6">
+            <Typography variant="subtitle1" className="mb-2">เลือกสีของร้านค่า</Typography>
+            <ColorPickerButton
+              color={config.displayConfig.primaryColor}
+              onChange={(color) => handleDisplayConfigChange('primaryColor', color)}
+            />
+          </div>
+
+          <TextField
+            label="ชื่อร้าน"
+            variant="outlined"
+            fullWidth
+            size="small"
+            className='mb-4'
+            value={config.displayConfig.shopName || ''}
+            onChange={(e) => handleDisplayConfigChange('shopName', e.target.value)}
+
+          />
+
+          <TextField
+            label="สโลแกน"
+            variant="outlined"
+            fullWidth
+            size="small"
+            className='mb-4'
+            value={config.displayConfig.shopSlogan || ''}
+            onChange={(e) => handleDisplayConfigChange('shopSlogan', e.target.value)}
+
+          />
+
+        </TabPanel>
+
+
       </TabContext >
 
       <Button
