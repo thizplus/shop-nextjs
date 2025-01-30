@@ -52,7 +52,7 @@ COPY --from=builder /app/src/@layouts ./src/@layouts
 COPY --from=builder /app/src/views ./src/views
 # Add other necessary folders based on your project structure
 
-EXPOSE 3000
+EXPOSE 5001
 
 # Start the application
 CMD ["npm", "start"]
