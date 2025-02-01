@@ -7,11 +7,11 @@ import {
 import { visuallyHidden } from '@mui/utils';
 
 export interface Column<T> {
-  id: keyof T | 'actions';  // เพิ่ม 'actions' เป็นตัวเลือก
+  id: keyof T | 'actions';
   numeric: boolean;
   disablePadding: boolean;
   label: string;
-  format?: (value: any) => React.ReactNode;
+  format?: (value: any, row: T) => React.ReactNode;  // เพิ่ม row parameter
 }
 
 export interface EnhancedTableProps<T> {
@@ -180,7 +180,7 @@ export default function EnhancedTable<T extends Record<string, any>>(props: Enha
                     </TableCell>
                     {columns.map((column) => (
                       <TableCell key={column.id as string} align={column.numeric ? 'right' : 'left'}>
-                        {column.format ? column.format(row[column.id]) : row[column.id]}
+                        {column.format ? column.format(row[column.id], row) : row[column.id]}
                       </TableCell>
                     ))}
 

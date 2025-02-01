@@ -60,7 +60,7 @@ const columns: Column<IPointTicket>[] = [
   }
 ];
 
-const rowsPerPageOptions = [20, 50];
+const rowsPerPageOptions = [20, 100];
 
 const MainPointTickets = () => {
   // States

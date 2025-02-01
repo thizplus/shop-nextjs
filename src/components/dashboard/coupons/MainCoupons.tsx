@@ -70,7 +70,7 @@ const columns: Column<ICoupon>[] = [
   }
 ];
 
-const rowsPerPageOptions = [20, 50];
+const rowsPerPageOptions = [20, 100];
 
 const MainCoupons = () => {
   const [page, setPage] = useState(0);

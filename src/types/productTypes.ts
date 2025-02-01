@@ -32,16 +32,8 @@ export interface TypesProduct {
   createdAt: Date;
   updatedAt: Date;
   warehousePrice?: {
-    _id: string;
     sku: string;
-    listPrice: Array<{
-      priceId: string;
-      priceName: string;
-      price: number;
-      createdAt: string;
-      updatedAt: string;
-      _id: string;
-    }>;
+    price: number;
   };
 }
 

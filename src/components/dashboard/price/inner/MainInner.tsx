@@ -28,7 +28,7 @@ const columns: Column<TypesProductInner>[] = [
   { id: 'availablestock', numeric: true, disablePadding: false, label: 'พร้อมขาย' },
 ];
 
-const rowsPerPageOptions = [20, 50];
+const rowsPerPageOptions = [20, 100];
 
 type PropsMainInner = {
   params: { id: string }

@@ -35,7 +35,7 @@ const columns: Column<TypeClient>[] = [
   },
 ];
 
-const rowsPerPageOptions = [20, 50];
+const rowsPerPageOptions = [20, 100];
 
 
 const MainClient = () => {

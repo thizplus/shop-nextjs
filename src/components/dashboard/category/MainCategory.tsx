@@ -33,7 +33,7 @@ const columns: Column<TypesCategory>[] = [
   },
 ];
 
-const rowsPerPageOptions = [20, 50];
+const rowsPerPageOptions = [20, 100];
 
 
 const MainCategory = () => {

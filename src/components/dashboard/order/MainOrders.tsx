@@ -73,7 +73,7 @@ const columns: Column<TypeOrder>[] = [
   },
 ];
 
-const rowsPerPageOptions = [20, 50];
+const rowsPerPageOptions = [20, 100];
 
 const MainOrders = () => {
   const [page, setPage] = useState(0);

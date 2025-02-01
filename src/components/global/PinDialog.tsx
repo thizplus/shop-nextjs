@@ -40,7 +40,7 @@ const PinDialog: React.FC<PinDialogProps> = ({
         {hasPin ? 'กรุณายืนยัน PIN' : 'กรุณาตั้งค่า PIN'}
       </DialogTitle>
       <DialogContent>
-        {hasPin ? 'ใส่ให้ถูก' : 'จำให้ได้น้า'}
+        {hasPin ? 'กรุณาใส่รหัสให้ถูกต้อง' : 'ตั้งรหัสผ่านของคุณ 6 หลัก'}
         <PinInput
           onSubmit={onPinSubmit}
           isVerifying={isVerifying}

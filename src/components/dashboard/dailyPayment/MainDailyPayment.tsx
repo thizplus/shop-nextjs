@@ -49,7 +49,7 @@ const columns: Column<IDailyPayment>[] = [
   }
 ];
 
-const rowsPerPageOptions = [20, 50];
+const rowsPerPageOptions = [20, 100];
 
 const MainDailyPayment = () => {
   const [page, setPage] = useState(0);

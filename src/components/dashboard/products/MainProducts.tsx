@@ -18,11 +18,18 @@ import type { TypesProduct } from "@/types/productTypes";
 
 import PriceEditor from '@/components/dashboard/products/priceEditor';
 import EditProductDialog from './EditProductDialog';
+import ProductInfoCell from './ProductInfoCell';
 
 const columns: Column<TypesProduct>[] = [
   // { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
   { id: 'sku', numeric: false, disablePadding: false, label: 'SKU' },
-  { id: 'name', numeric: false, disablePadding: false, label: 'ชื่อสินค้า' },
+  {
+    id: 'name', // ใช้ name เป็น id แต่จะแสดงข้อมูลรวมกัน
+    numeric: false,
+    disablePadding: false,
+    label: 'ข้อมูลสินค้า',
+    format: (value: any, row: TypesProduct) => <ProductInfoCell product={row} />
+  },
 
   //{ id: 'stock', numeric: true, disablePadding: false, label: 'คงเหลือ' },
   { id: 'availablestock', numeric: true, disablePadding: false, label: 'พร้อมขาย' },
@@ -30,32 +37,14 @@ const columns: Column<TypesProduct>[] = [
     id: 'warehousePrice',
     numeric: true,
     disablePadding: false,
-    label: 'ราคา',
+    label: 'ต้นทุน',
     format: (value: TypesProduct['warehousePrice']) => {
-      if (!value?.listPrice?.length) return '-';
+      if (!value?.price) return '-';
 
-      return value.listPrice.map(price =>
-        `${price.priceName}: ${price.price.toLocaleString()}฿`
-      ).join(', ');
+      return `${value.price.toLocaleString()}฿`;
     }
   },
-  {
-    id: 'categories',
-    numeric: false,
-    disablePadding: false,
-    label: 'หมวดหมู่',
-    format: (value: any) => {
-      if (Array.isArray(value)) {
-        const categories = value.map(cat => cat.name).join(', ');
 
-
-        return categories.length > 20 ? categories.substring(0, 20) + '...' : categories;
-      }
-
-
-      return '';
-    }
-  },
   {
     id: 'active',
     numeric: false,
@@ -79,7 +68,7 @@ const columns: Column<TypesProduct>[] = [
 
 
 
-const rowsPerPageOptions = [20, 50];
+const rowsPerPageOptions = [20, 100];
 
 
 const MainProducts = () => {
