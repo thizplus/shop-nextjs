@@ -27,7 +27,9 @@ export interface EnhancedTableProps<T> {
   orderBy: keyof T;
   order: 'asc' | 'desc';
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof T) => void;
-  renderRowActions?: (row: T) => React.ReactNode;  // เพิ่ม prop นี้
+  renderRowActions?: (row: T) => React.ReactNode;
+  selected?: readonly string[];  // New prop
+  onSelectChange?: (newSelected: readonly string[]) => void;  // New prop
 }
 
 export default function EnhancedTable<T extends Record<string, any>>(props: EnhancedTableProps<T>) {
@@ -44,28 +46,35 @@ export default function EnhancedTable<T extends Record<string, any>>(props: Enha
     orderBy,
     order,
     onRequestSort,
-    renderRowActions
+    renderRowActions,
+    selected = [],
+    onSelectChange
   } = props;
 
-  const [selected, setSelected] = useState<readonly string[]>([]);
+  //const [selected, setSelected] = useState<readonly string[]>([]);
   const [dense, setDense] = useState(true);
 
 
   console.log('totalItems', totalItems)
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!onSelectChange) return;
+
     if (event.target.checked) {
       const newSelected = data.map((n) => getRowId(n).toString());
 
-      setSelected(newSelected);
+      onSelectChange(newSelected);
 
       return;
     }
 
-    setSelected([]);
+    onSelectChange([]);
   };
 
-  const handleClick = (event: React.MouseEvent<unknown>, id: string) => {
+  const handleCheckboxClick = (event: React.MouseEvent<HTMLButtonElement>, id: string) => {
+    event.stopPropagation(); // Prevent row click event
+    if (!onSelectChange) return;
+
     const selectedIndex = selected.indexOf(id);
     let newSelected: readonly string[] = [];
 
@@ -82,7 +91,7 @@ export default function EnhancedTable<T extends Record<string, any>>(props: Enha
       );
     }
 
-    setSelected(newSelected);
+    onSelectChange(newSelected);
   };
 
   const handleChangeDense = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,7 +171,8 @@ export default function EnhancedTable<T extends Record<string, any>>(props: Enha
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => handleClick(event, getRowId(row).toString())}
+
+                    // onClick={(event) => handleClick(event, getRowId(row).toString())}
                     role="checkbox"
                     aria-checked={isItemSelected}
                     tabIndex={-1}
@@ -173,6 +183,7 @@ export default function EnhancedTable<T extends Record<string, any>>(props: Enha
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
+                        onClick={(event) => handleCheckboxClick(event, getRowId(row).toString())}
                         inputProps={{
                           'aria-labelledby': labelId,
                         }}
@@ -180,7 +191,10 @@ export default function EnhancedTable<T extends Record<string, any>>(props: Enha
                     </TableCell>
                     {columns.map((column) => (
                       <TableCell key={column.id as string} align={column.numeric ? 'right' : 'left'}>
-                        {column.format ? column.format(row[column.id], row) : row[column.id]}
+                        {column.format
+                          ? column.format(row[column.id], row)
+                          : row[column.id]
+                        }
                       </TableCell>
                     ))}
 

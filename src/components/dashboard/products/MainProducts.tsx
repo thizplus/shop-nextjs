@@ -21,6 +21,11 @@ import ProductInfoCell from './ProductInfoCell';
 import SearchInput from '@/components/global/SearchInput';
 
 
+import { useBulkUpdateProducts } from '@/actions/backend/products/useBulkUpdateProducts';
+import useCategoryAll from '@/actions/backend/category/useCategoryAll';
+import BulkEditDialog from './BulkEditDialog';
+
+
 const columns: Column<TypesProduct>[] = [
   // { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
   { id: 'sku', numeric: false, disablePadding: false, label: 'SKU' },
@@ -87,6 +92,13 @@ const MainProducts = () => {
 
   const [editingProduct, setEditingProduct] = useState<TypesProduct | null>(null);
 
+  const [selected, setSelected] = useState<readonly string[]>([]);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+
+  const bulkUpdateMutation = useBulkUpdateProducts();
+  const { data: categoryData } = useCategoryAll(1, 100);
+
+
   const { data: allProductsData, isLoading: isLoadingAll, isError: isErrorAll, error: errorAll }
     = useProductAll(page + 1, rowsPerPage);
 
@@ -132,6 +144,21 @@ const MainProducts = () => {
     setPage(0);
   };
 
+
+  const handleBulkEdit = async (updates: {
+    skus: string[];
+    prices?: { [key: string]: number };
+    categories?: string[];
+  }) => {
+    try {
+      await bulkUpdateMutation.mutateAsync(updates);
+      setSelected([]);
+      setIsBulkEditOpen(false);
+    } catch (error) {
+      console.error('Bulk update failed:', error);
+      throw error;
+    }
+  };
 
   const renderActions = (row: TypesProduct) => (
     <Box sx={{
@@ -187,7 +214,9 @@ const MainProducts = () => {
     return <div>Error: Invalid data received from the server</div>;
   }
 
-  console.log('xxx:', data);
+  const selectedProducts = data?.items.filter(product =>
+    selected.includes(product.sku.toString())
+  ) || [];
 
 
 
@@ -201,6 +230,16 @@ const MainProducts = () => {
 
 
         <div className='flex gap-2 items-center'>
+          {selected.length > 0 && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setIsBulkEditOpen(true)}
+              startIcon={<i className="tabler-edit" />}
+            >
+              แก้ไขสินค้าที่เลือก ({selected.length})
+            </Button>
+          )}
           <SearchInput
             onSearch={handleSearch}
             onReset={handleResetSearch}
@@ -234,7 +273,7 @@ const MainProducts = () => {
       <EnhancedTable<TypesProduct>
         columns={columns}
         data={data.items}
-        getRowId={(row) => row._id.toString()}
+        getRowId={(row) => row.sku}  // ตรงนี้ใช้ sku อยู่แล้ว
         page={page}
         rowsPerPage={rowsPerPage}
         rowsPerPageOptions={rowsPerPageOptions}
@@ -245,7 +284,19 @@ const MainProducts = () => {
         order={order}
         onRequestSort={handleRequestSort}
         renderRowActions={renderActions}
+        selected={selected}
+        onSelectChange={setSelected}
       />
+
+      {isBulkEditOpen && selectedProducts.length > 0 && (  // เพิ่มเงื่อนไขตรวจสอบ selectedProducts
+        <BulkEditDialog
+          open={isBulkEditOpen}
+          onClose={() => setIsBulkEditOpen(false)}
+          selectedProducts={selectedProducts}
+          availableCategories={categoryData?.items || []}
+          onSave={handleBulkEdit}
+        />
+      )}
 
       {editingProduct && (
         <EditProductDialog

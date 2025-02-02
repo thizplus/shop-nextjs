@@ -93,29 +93,22 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
           </SubMenu>
         </MenuSection>
 
-        <MenuSection label='SYSTEM SETTING'>
 
-
-          <MenuItem icon={<i className='tabler-settings' />} href='/dashboard/setting'>ตั้งค่าพื้นฐาน</MenuItem>
-
-
-        </MenuSection>
 
         <MenuSection label='SHOP SYSTEM'>
           <MenuItem icon={<i className='tabler-users-group' />} href='/dashboard/clients'>ลูกค้าทั้งหมด</MenuItem>
           <MenuItem icon={<i className='tabler-building-store' />} href='/dashboard/orders'>คำสั่งซื้อทั้งหมด</MenuItem>
-
-
-
         </MenuSection>
 
 
         <MenuSection label='EXTENSION'>
-
-
           <MenuItem icon={<i className='tabler-discount-check-filled' />} href='/dashboard/coupons'>ระบบคูปอง</MenuItem>
           <MenuItem icon={<i className='tabler-number-123' />} href='/dashboard/point'>ระบบสะสมแต้ม</MenuItem>
+        </MenuSection>
 
+
+        <MenuSection label='SYSTEM SETTING'>
+          <MenuItem icon={<i className='tabler-settings' />} href='/dashboard/setting'>ตั้งค่าพื้นฐาน</MenuItem>
         </MenuSection>
 
       </Menu>
