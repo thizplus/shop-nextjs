@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
 
 import Divider from '@mui/material/Divider';
 
@@ -19,6 +18,8 @@ import type { TypesProduct } from "@/types/productTypes";
 import PriceEditor from '@/components/dashboard/products/priceEditor';
 import EditProductDialog from './EditProductDialog';
 import ProductInfoCell from './ProductInfoCell';
+import SearchInput from '@/components/global/SearchInput';
+
 
 const columns: Column<TypesProduct>[] = [
   // { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
@@ -76,7 +77,11 @@ const MainProducts = () => {
   const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[0]);
   const [orderBy, setOrderBy] = useState<keyof TypesProduct>('id');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
-  const [searchQuery, setSearchQuery] = useState('');
+
+  //const [searchQuery, setSearchQuery] = useState('');
+
+  //const [searchInputValue, setSearchInputValue] = useState('');
+
   const [isSearching, setIsSearching] = useState(false);
   const [effectiveSearchQuery, setEffectiveSearchQuery] = useState('');
 
@@ -94,6 +99,9 @@ const MainProducts = () => {
     }
   }, [isSearching]);
 
+
+
+
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -110,21 +118,19 @@ const MainProducts = () => {
     setOrderBy(property);
   };
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
+  const handleSearch = (value: string) => {
+    if (value.trim()) {
       setIsSearching(true);
-      setEffectiveSearchQuery(searchQuery.trim());
+      setEffectiveSearchQuery(value.trim());
       setPage(0);
     }
   };
 
   const handleResetSearch = () => {
-    setSearchQuery('');
     setIsSearching(false);
     setEffectiveSearchQuery('');
     setPage(0);
   };
-
 
 
   const renderActions = (row: TypesProduct) => (
@@ -183,6 +189,8 @@ const MainProducts = () => {
 
   console.log('xxx:', data);
 
+
+
   return (
     <>
       <h1>ข้อมูลสินค้า</h1>
@@ -193,32 +201,25 @@ const MainProducts = () => {
 
 
         <div className='flex gap-2 items-center'>
-          <TextField
-            label="ค้นหาจาก SKU หรือ ชื่อสินค้า"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            size="small"
-            sx={{
-              '& .MuiInputBase-root': {
-                height: '40px',
-              },
-              '& .MuiInputLabel-root': {
-                transform: 'translate(14px, 8px) scale(1)',
-                '&.MuiInputLabel-shrink': {
-                  transform: 'translate(14px, -6px) scale(0.75)',
-                },
-              },
-            }}
+          <SearchInput
+            onSearch={handleSearch}
+            onReset={handleResetSearch}
+            defaultValue={effectiveSearchQuery}
           />
 
           <Button
             variant='contained'
             color='primary'
-            onClick={handleSearch}
+            onClick={() => {
+              const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+
+              handleSearch(searchInput.value);
+            }}
             startIcon={<i className='tabler-search' />}
           >
             ค้นหา
           </Button>
+
           {isSearching && (
             <Button
               variant="outlined"
