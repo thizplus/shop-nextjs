@@ -10,21 +10,22 @@ ARG NEXT_PUBLIC_STORE_URL
 ARG NEXT_PUBLIC_SITE_NAME
 ARG NEXT_PUBLIC_SITE_CODE
 
-
-
 # Set environment variables
-ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
-ENV NEXT_PUBLIC_SERVER_URL=$NEXT_PUBLIC_SERVER_URL
-ENV NEXT_PUBLIC_STORE_URL=$NEXT_PUBLIC_STORE_URL
-ENV NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME
-ENV NEXT_PUBLIC_SITE_CODE=$NEXT_PUBLIC_SITE_CODE
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
+    NEXT_PUBLIC_SERVER_URL=$NEXT_PUBLIC_SERVER_URL \
+    NEXT_PUBLIC_STORE_URL=$NEXT_PUBLIC_STORE_URL \
+    NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME \
+    NEXT_PUBLIC_SITE_CODE=$NEXT_PUBLIC_SITE_CODE
+
+# เพิ่ม dependencies ที่จำเป็น
+RUN apk add --no-cache libc6-compat
 
 # Copy package files
 COPY package*.json ./
 COPY . .
 
-# Install dependencies
-RUN npm ci
+# Install dependencies with legacy peer deps flag
+RUN npm ci --legacy-peer-deps
 
 # Build project
 RUN npm run build
@@ -34,9 +35,9 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Environment variables
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED 1
+# Environment variables ในรูปแบบใหม่
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
 
 # Copy necessary files from builder
 COPY --from=builder /app/.next ./.next
@@ -50,7 +51,6 @@ COPY --from=builder /app/src/components ./src/components
 COPY --from=builder /app/src/@core ./src/@core
 COPY --from=builder /app/src/@layouts ./src/@layouts
 COPY --from=builder /app/src/views ./src/views
-# Add other necessary folders based on your project structure
 
 EXPOSE 5001
 
