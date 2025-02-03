@@ -81,6 +81,8 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
     }
   }, [config, fetchConfig]);
 
+
+
   useEffect(() => {
     const fetchDeliveryStatus = async () => {
       if (user?.userId) {
@@ -104,7 +106,8 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
 
   const handleClickOpen = async () => {
     setOpen(true);
-    await updateCartPrices(); // อัพเดทราคาเมื่อเปิด dialog
+
+    // await updateCartPrices(); // อัพเดทราคาเมื่อเปิด dialog
   };
 
   const handleClose = (): void => setOpen(false);
@@ -136,7 +139,19 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, priceId, getTotalAmount, cartVersion, method]);
 
+  useEffect(() => {
+    const updateTotals = async () => {
+      if (open) {
+        await updateCartPrices();
 
+        // Set net total after cart prices are updated
+        setNetTotal(getTotalAmount(priceId) + calculateShippingCost);
+      }
+    };
+
+    updateTotals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, getTotalAmount, priceId, calculateShippingCost]);
 
   const totalWithShipping = useMemo(() => {
     return getTotalAmount(priceId) + calculateShippingCost;
@@ -372,7 +387,7 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
                       {item.customPrice ? (
                         <span className="text-green-600">ราคาพิเศษ: {formatNumber(item.customPrice)} </span>
                       ) : (
-                        <span>ราคา: {formatNumber(item.price)}</span>
+                        <span>ราคา: {formatNumber(item.price)} </span>
                       )}
                       | คงเหลือ: {item.availablestock}
                     </p>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { TextField } from '@mui/material';
 
@@ -12,21 +12,15 @@ interface PropsAddToCart {
 }
 
 const AddToCart: React.FC<PropsAddToCart> = ({ items, priceId }) => {
-  const { addItem, updateItemQuantity, getItemQuantity, updateItemPrice } = useCartStore();
+  const { addItem, updateItemQuantity, getItemQuantity } = useCartStore();
   const quantity = getItemQuantity(priceId, items.sku);
 
   const { user } = useClientStores();
   const customPrice = user?.customPrices?.find(cp => cp.sku === items.sku)?.price;
 
-  const price = customPrice || items.price;
+  //const price = customPrice || items.price;
 
-  useEffect(() => {
-    if (quantity > 0) {
-      // ปรับจาก items.price เป็น price (ที่รวม customPrice แล้ว)
-      updateItemPrice(priceId, items.sku, price);
-      updateItemQuantity(priceId, items.sku, Math.min(quantity, items.availablestock));
-    }
-  }, [items, priceId, quantity, updateItemPrice, updateItemQuantity, price]); // เพิ่ม price ใน dependencies
+
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newQuantity = Math.min(parseInt(event.target.value) || 0, items.availablestock);
@@ -49,9 +43,13 @@ const AddToCart: React.FC<PropsAddToCart> = ({ items, priceId }) => {
   const updateQuantity = (newQuantity: number) => {
     if (quantity === 0 && newQuantity > 0) {
       addItem(priceId, {
-        ...items,
+        sku: items.sku,
         qty: newQuantity,
-        price: customPrice || items.price, // ใช้ customPrice ถ้ามี
+        price: items.price,
+        customPrice: customPrice, // เก็บ customPrice แยก
+        name: items.name,
+        imagepath: items.imagepath,
+        availablestock: items.availablestock,
       });
     } else {
       updateItemQuantity(priceId, items.sku, newQuantity);
