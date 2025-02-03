@@ -55,8 +55,9 @@ export interface Coupon {
   discountAmount: number;
 }
 
-export type TypeOrder = {
-  _id: ObjectId;
+export interface TypeOrder {
+  _id?: ObjectId;  // ทำให้เป็น optional เพราะตอนสร้างใหม่ยังไม่มี
+  warehouseOrderId?: string;
   orderId: string;
   shopName?: string;
   typeOrder: string;
@@ -74,9 +75,9 @@ export type TypeOrder = {
   coupon?: Coupon;
   discountAmount: number;
   payment: Payment;
-  createdAt: string | Date;
-  updatedAt: string | Date;
-  __v: number;
+  createdAt?: string | Date; // ทำให้เป็น optional
+  updatedAt?: string | Date; // ทำให้เป็น optional
+  __v?: number; // ทำให้เป็น optional
 }
 
 export interface OrderResponse {

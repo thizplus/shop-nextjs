@@ -186,14 +186,12 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
   const handleCreateOrders = async () => {
     const { user } = useClientStores.getState();
 
-    if (!user || !user.userId) {
-      setSnackbar({ open: true, message: 'กรุณาเข้าสู่ระบบก่อนทำรายการ', severity: 'error' });
-
-      return;
-    }
-
-    if (!selectedAddress) {
-      setSnackbar({ open: true, message: 'กรุณาเลือกที่อยู่จัดส่ง', severity: 'error' });
+    if (!user?.userId || !selectedAddress) {
+      setSnackbar({
+        open: true,
+        message: !user?.userId ? 'กรุณาเข้าสู่ระบบก่อนทำรายการ' : 'กรุณาเลือกที่อยู่จัดส่ง',
+        severity: 'error'
+      });
 
       return;
     }
@@ -201,7 +199,7 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
     setIsProcess(true);
 
     try {
-      // Check Zort stock first
+      // เช็ค stock ก่อน
       const stockCheck = await checkWarehouseStock(
         filteredItems.map(item => ({
           sku: item.sku,
@@ -210,32 +208,19 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
       );
 
       if (!stockCheck.success) {
-        if (stockCheck.error) {
-          throw new Error(stockCheck.error);
-        }
-
-        // อัพเดต insufficientStock state เพื่อแสดง Alert
         setInsufficientStock(
           stockCheck.insufficientItems?.map(item => ({
             name: item.name,
             available: item.available
           })) || null
         );
-
-        setIsProcess(false);
-
-        return;
+        throw new Error(stockCheck.error || 'สินค้าในสต็อกไม่เพียงพอ');
       }
 
-      // ถ้าสต็อกพอ เคลียร์ insufficientStock
       setInsufficientStock(null);
 
-      const now = new Date();
-      const expire = new Date(now.getTime() + 15 * 60000); // +15 นาที
-
-
-
-      const orderData = {
+      // สร้าง order data
+      const orderData: Omit<TypeOrder, '_id' | 'createdAt' | 'updatedAt' | '__v'> = {
         orderId: `${process.env.NEXT_PUBLIC_SITE_CODE}-${Date.now()}`,
         typeOrder: 'store',
         typeId: priceId,
@@ -263,10 +248,10 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
         shippingMethod: method,
         subTotal: getTotalAmount(priceId),
         totalAmount: getTotalAmount(priceId) - couponDiscount,
-        netTotal: totalWithShipping - couponDiscount,
-        expire: expire.toISOString(),
+        netTotal: netTotal,
+        expire: new Date(Date.now() + 15 * 60000),
         payment: {
-          status: 'pending' as const,
+          status: 'pending',
           amount: 0,
           slip: []
         },
@@ -278,22 +263,29 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
           isPercent: selectedCoupon.isPercent,
           discountAmount: couponDiscount
         } : undefined
-      } as unknown as TypeOrder;
+      };
 
-      await actionCreateOrder(orderData);
+      // ส่งไปที่คลัง
+      const warehouseResponse = await sendOrderToWarehouse(orderData);
 
+      if (!warehouseResponse?.success) {
+        throw new Error(warehouseResponse?.error || 'Failed to process in warehouse');
+      }
 
-      // await sendLineNotification(orderData);
-      // await sendLineFlexMessage(orderData);
+      // สร้าง order ในร้านค้า
+      await actionCreateOrder({
+        ...orderData,
+        warehouseOrderId: warehouseResponse.order._id
+      });
 
-      const res = await sendOrderToWarehouse(orderData);
+      setSnackbar({
+        open: true,
+        message: 'สร้างคำสั่งซื้อสำเร็จ',
+        severity: 'success'
+      });
 
-      console.log('orderData: ', orderData);
-
-      setSnackbar({ open: true, message: 'สร้างคำสั่งซื้อสำเร็จ', severity: 'success' });
       handleClose();
-
-      setPayment(res.orderData);
+      setPayment(warehouseResponse.order);
       useCartStore.getState().clearCart(priceId);
 
     } catch (error) {

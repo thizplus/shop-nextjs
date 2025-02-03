@@ -25,6 +25,7 @@ import { sendOrderToWarehouse } from '@/actions/zortout/actionWarehouse';
 import type { TypeOrder } from '@/types/orderTypes';
 import Payment from '../global/header/payment';
 import { useMultiPriceUpdate } from '@/actions/store/useMultiPriceUpdate';
+
 import { checkWarehouseStock } from '@/actions/backend/orders/checkWarehouseStock';
 import { useShippingMethodStore } from '@/stores/shippingMethodStore';
 
@@ -212,17 +213,16 @@ const MultiPriceTotalCart: React.FC = () => {
     return !minOrderStatus || localTotalAmount >= minOrderValue;
   }, [config, localTotalAmount]);
 
+  // 1. ปรับที่ร้านค้า - handleCreateOrders
   const handleCreateOrders = async () => {
     const { user } = useClientStores.getState();
 
-    if (!user || !user.userId) {
-      setSnackbar({ open: true, message: 'กรุณาเข้าสู่ระบบก่อนทำรายการ', severity: 'error' });
-
-      return;
-    }
-
-    if (!selectedAddress) {
-      setSnackbar({ open: true, message: 'กรุณาเลือกที่อยู่จัดส่ง', severity: 'error' });
+    if (!user?.userId || !selectedAddress) {
+      setSnackbar({
+        open: true,
+        message: !user?.userId ? 'กรุณาเข้าสู่ระบบก่อนทำรายการ' : 'กรุณาเลือกที่อยู่จัดส่ง',
+        severity: 'error'
+      });
 
       return;
     }
@@ -230,7 +230,7 @@ const MultiPriceTotalCart: React.FC = () => {
     setIsProcess(true);
 
     try {
-      // Check Zort stock first
+      // เช็ค stock ก่อน
       const stockCheck = await checkWarehouseStock(
         filteredItems.map(item => ({
           sku: item.sku,
@@ -239,30 +239,19 @@ const MultiPriceTotalCart: React.FC = () => {
       );
 
       if (!stockCheck.success) {
-        if (stockCheck.error) {
-          throw new Error(stockCheck.error);
-        }
-
-        // อัพเดต insufficientStock state เพื่อแสดง Alert
         setInsufficientStock(
           stockCheck.insufficientItems?.map(item => ({
             name: item.name,
             available: item.available
           })) || null
         );
-
-        setIsProcess(false);
-
-        return;
+        throw new Error(stockCheck.error || 'สินค้าในสต็อกไม่เพียงพอ');
       }
 
-      // ถ้าสต็อกพอ เคลียร์ insufficientStock
       setInsufficientStock(null);
 
-      const now = new Date();
-      const expire = new Date(now.getTime() + 15 * 60000); // +15 นาที
-
-      const orderData = {
+      // สร้าง order data
+      const orderData: Omit<TypeOrder, '_id' | 'createdAt' | 'updatedAt' | '__v'> = {
         orderId: `${process.env.NEXT_PUBLIC_SITE_CODE}-${Date.now()}`,
         typeOrder: 'store',
         typeId: 'store',
@@ -291,7 +280,7 @@ const MultiPriceTotalCart: React.FC = () => {
         subTotal: localBaseTotalCart,
         totalAmount: localTotalAmount - couponDiscount,
         netTotal: netTotal,
-        expire: expire.toISOString(),
+        expire: new Date(Date.now() + 15 * 60000),
         payment: {
           status: 'pending',
           amount: 0,
@@ -305,22 +294,30 @@ const MultiPriceTotalCart: React.FC = () => {
           isPercent: selectedCoupon.isPercent,
           discountAmount: couponDiscount
         } : undefined
-      } as unknown as TypeOrder;
+      };
 
-      actionCreateOrder(orderData);
+      // ส่งไปที่คลัง
+      const warehouseResponse = await sendOrderToWarehouse(orderData);
 
-      // await sendLineNotification(orderData);
-      // await sendLineFlexMessage(orderData);
+      if (!warehouseResponse?.success) {
+        throw new Error(warehouseResponse?.error || 'Failed to process in warehouse');
+      }
 
-      const res = await sendOrderToWarehouse(orderData);
+      // สร้าง order ในร้านค้า
+      await actionCreateOrder({
+        ...orderData,
+        warehouseOrderId: warehouseResponse.order._id
+      });
 
-      setSnackbar({ open: true, message: 'สร้างคำสั่งซื้อสำเร็จ', severity: 'success' });
+      setSnackbar({
+        open: true,
+        message: 'สร้างคำสั่งซื้อสำเร็จ',
+        severity: 'success'
+      });
 
       handleClose();
-
-      setPayment(res.orderData);
+      setPayment(warehouseResponse.order);
       clearCart();
-      console.log('orderData send payment:', res.orderData)
 
     } catch (error) {
       console.error('Failed to create order:', error);
