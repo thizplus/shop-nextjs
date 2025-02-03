@@ -4,6 +4,7 @@ import { TextField } from '@mui/material';
 
 import { useCartStore } from '@/stores/cartStore';
 import type { TypesProductWholesale } from '@/types/productTypes';
+import { useClientStores } from '@/stores/authStore';
 
 interface PropsAddToCart {
   items: TypesProductWholesale;
@@ -13,6 +14,11 @@ interface PropsAddToCart {
 const AddToCart: React.FC<PropsAddToCart> = ({ items, priceId }) => {
   const { addItem, updateItemQuantity, getItemQuantity, updateItemPrice } = useCartStore();
   const quantity = getItemQuantity(priceId, items.sku);
+
+  const { user } = useClientStores();
+  const customPrice = user?.customPrices?.find(cp => cp.sku === items.sku)?.price;
+
+  const price = customPrice || items.price;
 
   useEffect(() => {
     if (quantity > 0) {
@@ -43,12 +49,10 @@ const AddToCart: React.FC<PropsAddToCart> = ({ items, priceId }) => {
   const updateQuantity = (newQuantity: number) => {
     if (quantity === 0 && newQuantity > 0) {
       addItem(priceId, {
-        sku: items.sku,
+        ...items,
         qty: newQuantity,
-        price: items.price ?? 0,
-        name: items.name,
-        imagepath: items.imagepath,
-        availablestock: items.availablestock,
+        price: price,
+        customPrice: customPrice
       });
     } else {
       updateItemQuantity(priceId, items.sku, newQuantity);

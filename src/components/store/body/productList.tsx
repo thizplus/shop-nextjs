@@ -158,7 +158,7 @@ const MultiPriceProductList: React.FC<Props> = ({ priceIds }) => {
 
                     {/* Custom Price Display */}
                     {customPrice ? (
-                      <div className="mb-1 bg-green-50 p-2 rounded">
+                      <div className="mb-1  rounded">
                         <p className="text-xs leading-none flex justify-between border-b-[1px] border-dashed text-green-600">
                           ราคาพิเศษ: <strong>{formatNumber(customPrice.price)}฿</strong>
                         </p>
@@ -181,7 +181,8 @@ const MultiPriceProductList: React.FC<Props> = ({ priceIds }) => {
                     <div className="mt-2">
                       <MultiPriceAddToCart
                         product={product}
-                        customPrice={customPrice}
+
+                      // customPrice={customPrice}
                       />
                     </div>
                   </div>

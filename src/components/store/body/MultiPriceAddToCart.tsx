@@ -5,11 +5,11 @@ import { TextField } from '@mui/material';
 import { useMultiPriceCartStore } from '@/stores/multiCartStore';
 import { useClientStores } from '@/stores/authStore';
 import type { MultiPriceProduct } from '@/types/multiplePrice';
-import type { ICustomPrice } from '@/types/productTypes';
+
+//import type { ICustomPrice } from '@/types/productTypes';
 
 interface PropsMultiPriceAddToCart {
   product: MultiPriceProduct;
-  customPrice: ICustomPrice | undefined;
 }
 
 const MultiPriceAddToCart: React.FC<PropsMultiPriceAddToCart> = ({ product }) => {

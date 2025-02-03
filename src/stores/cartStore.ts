@@ -5,6 +5,7 @@ interface CartItem {
   sku: string;
   qty: number;
   price: number;
+  customPrice?: number; // เพิ่ม customPrice
   name: string;
   imagepath: string | null;
   availablestock: number;
@@ -21,6 +22,8 @@ interface CartState {
   getItemQuantity: (priceId: string, sku: string) => number;
   updateItemPrice: (priceId: string, sku: string, newPrice: number) => void;
   updateAvailableStock: (priceId: string, sku: string, newAvailableStock: number) => void;
+  getCustomPrice: (priceId: string, sku: string) => number | null;
+  setCustomPrice: (priceId: string, sku: string, price: number) => void;
 }
 
 export const useCartStore = create<CartState>()(
@@ -78,7 +81,8 @@ export const useCartStore = create<CartState>()(
         const cart = get().carts[priceId] || [];
 
 
-        return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+        return cart.reduce((sum, item) =>
+          sum + (item.customPrice || item.price) * item.qty, 0);
       },
       getItemCount: (priceId) => {
         const cart = get().carts[priceId] || [];
@@ -93,6 +97,23 @@ export const useCartStore = create<CartState>()(
 
         return item ? item.qty : 0;
       },
+
+      getCustomPrice: (priceId, sku) => {
+        const cart = get().carts[priceId] || [];
+        const item = cart.find(i => i.sku === sku);
+
+
+        return item?.customPrice || null;
+      },
+
+      setCustomPrice: (priceId, sku, price) => set((state) => ({
+        carts: {
+          ...state.carts,
+          [priceId]: (state.carts[priceId] || []).map((i) =>
+            i.sku === sku ? { ...i, customPrice: price } : i
+          ),
+        },
+      })),
 
       updateItemPrice: (priceId, sku, newPrice) => set((state) => ({
         carts: {
@@ -127,6 +148,7 @@ export const useCartStore = create<CartState>()(
         };
       }),
     }),
+
     {
       name: 'cart-storage',
     }
