@@ -1,3 +1,4 @@
+// components/dashboard/clients/CustomPriceDialog.tsx
 import React, { useState, useEffect } from 'react';
 
 import {
@@ -7,167 +8,116 @@ import {
   DialogActions,
   Button,
   TextField,
-  Typography,
-  IconButton,
-  InputAdornment,
-  CircularProgress,
+  Paper,
   Alert,
   List,
   ListItem,
-  Autocomplete
+  IconButton,
+  Box,
+  Typography
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 
 import useCustomPrices from '@/actions/backend/clients/useCustomPrices';
 import useSearchProducts from '@/actions/backend/clients/useSearchProducts';
 
-interface Product {
-  _id: string;
-  sku: string;
-  name: string;
-  availablestock: number;
-  category: string;
-}
-
-interface CustomPrice {
-  sku: string;
-  price: number;
-  name?: string;
-}
+import ProductSearchAutocomplete from './ProductSearchAutocomplete';
+import type { ICustomPrice, ISearchProduct } from '@/types/productTypes';
 
 interface CustomPriceDialogProps {
   userId: string;
-  currentPrices: CustomPrice[];
+  currentPrices: ICustomPrice[];
 }
 
-const StyledAutoComplete = styled(Autocomplete<Product, false, false, false>)({
-  '& .MuiAutocomplete-listbox': {
-    maxHeight: '300px',
-    '& li': {
-      borderBottom: '1px solid #eee',
-      padding: '12px 16px',  // เพิ่ม padding
-      '&:not(:last-child)': {
-        marginBottom: '4px'  // เพิ่ม margin ระหว่างรายการ
-      }
-    }
-  },
-  '& .MuiAutocomplete-popper': {
-    marginTop: '8px',
-  }
-});
-
-const CustomPriceDialog: React.FC<CustomPriceDialogProps> = ({ userId, currentPrices }) => {
+const CustomPriceDialog: React.FC<CustomPriceDialogProps> = ({
+  userId,
+  currentPrices
+}) => {
   const [open, setOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [skuInput, setSkuInput] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [priceInput, setPriceInput] = useState('');
-  const [customPrices, setCustomPrices] = useState<CustomPrice[]>(currentPrices || []);
+  const [customPrices, setCustomPrices] = useState<ICustomPrice[]>(currentPrices || []);
 
+  const isAllPricesValid = () => {
+    return customPrices.every(price => price.price > 0);
+  };
+
+  // Add debounce for search
   useEffect(() => {
-    if (open) {
-      setCustomPrices(currentPrices || []);
-      setSkuInput('');
-      setPriceInput('');
-      setSelectedProduct(null);
-      setError(null);
-    }
-  }, [open, currentPrices]);
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput);
+    }, 300);
 
-  const { data: searchResults = [], isLoading: isSearching } = useSearchProducts(skuInput);
 
-  const {
-    mutate: saveCustomPrices,
-    isPending: isProcessing,
-    data: updateResult
-  } = useCustomPrices();
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const { data: searchResults = [], isLoading: isSearching } = useSearchProducts(searchTerm);
+  const { mutate: saveCustomPrices, isPending: isProcessing } = useCustomPrices();
 
   const handleClose = () => {
     if (!isProcessing) {
       setOpen(false);
       setError(null);
-      setSkuInput('');
-      setPriceInput('');
-      setSelectedProduct(null);
+      setSearchInput('');
       setCustomPrices(currentPrices || []);
     }
   };
 
-  const handleAddPrice = () => {
-    if (!selectedProduct || !priceInput) {
-      setError('กรุณาเลือกสินค้าและระบุราคา');
+  const handleProductSelect = (selectedProducts: ISearchProduct[]) => {
+    const newPrices = selectedProducts.map(product => {
+      const costPrice = product.listPrice?.find(p => p.priceName === 'COST')?.price || 0;
 
-      return;
-    }
 
-    const price = parseFloat(priceInput);
+      return {
+        sku: product.sku,
+        price: costPrice,  // ใช้ราคา COST เป็นราคาเริ่มต้น
+        name: product.name
+      };
+    });
 
-    if (isNaN(price) || price < 0) {
-      setError('ราคาไม่ถูกต้อง');
+    setCustomPrices(prev => {
+      const combined = [...prev, ...newPrices];
 
-      return;
-    }
 
-    if (customPrices.some(p => p.sku === selectedProduct.sku)) {
-      setError('สินค้านี้มีอยู่ในรายการแล้ว');
+      return combined.sort((a, b) => a.sku.localeCompare(b.sku));
+    });
 
-      return;
-    }
+    setSearchInput('');
+  };
 
-    setCustomPrices(prev => [...prev, {
-      sku: selectedProduct.sku,
-      price,
-      name: selectedProduct.name
-    }]);
-    setSkuInput('');
-    setPriceInput('');
-    setSelectedProduct(null);
-    setError(null);
+  const handlePriceChange = (sku: string, price: number) => {
+    setCustomPrices(prev =>
+      prev.map(item =>
+        item.sku === sku ? { ...item, price } : item
+      )
+    );
   };
 
   const handleRemovePrice = (sku: string) => {
     setCustomPrices(prev => prev.filter(p => p.sku !== sku));
   };
 
-  const onSubmit = async () => {
+  const handleSubmit = async () => {
     try {
       setError(null);
 
-      if (customPrices.length === 0) {  // เพิ่มเงื่อนไขนี้
-        // ถ้าไม่มีรายการ ให้ส่ง array เปล่าไป
-        await saveCustomPrices(
-          { userId, prices: [] },
-          {
-            onSuccess: () => {
-              setTimeout(() => {
-                setOpen(false);
-                setSkuInput('');
-                setPriceInput('');
-                setSelectedProduct(null);
-                setCustomPrices([]);  // รีเซ็ตเป็น array เปล่า
-              }, 1500);
-            },
-            onError: (error) => {
-              setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึก');
-            }
-          }
-        );
+      // Validate prices
+      const invalidPrices = customPrices.filter(p => p.price <= 0);
 
-        return;  // ออกจากฟังก์ชันเลย
+      if (invalidPrices.length > 0) {
+        setError('กรุณาระบุราคาให้ครบทุกรายการ');
+
+        return;
       }
 
-      // ถ้ามีรายการ ทำงานปกติ
       await saveCustomPrices(
         { userId, prices: customPrices },
         {
           onSuccess: () => {
-            setTimeout(() => {
-              setOpen(false);
-              setSkuInput('');
-              setPriceInput('');
-              setSelectedProduct(null);
-              setCustomPrices([]);
-            }, 1500);
+            setOpen(false);
+            setCustomPrices([]);
+            setSearchInput('');
           },
           onError: (error) => {
             setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึก');
@@ -178,145 +128,6 @@ const CustomPriceDialog: React.FC<CustomPriceDialogProps> = ({ userId, currentPr
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึก');
     }
   };
-
-  const renderContent = () => (
-    <div className="space-y-4">
-      {error && (
-        <Alert severity="error" className="mb-4">
-          {error}
-        </Alert>
-      )}
-
-      <div className="flex gap-2">
-        <StyledAutoComplete
-          fullWidth
-          options={searchResults}
-          value={selectedProduct}
-          getOptionLabel={(option: Product) => `${option.sku} - ${option.name}`}
-          isOptionEqualToValue={(option: Product, value: Product) => option.sku === value.sku}
-          inputValue={skuInput}
-          onInputChange={(_, newValue) => {
-            setSkuInput(newValue);
-            setError(null);
-          }}
-          onChange={(_, newValue: Product | null) => {
-            setSelectedProduct(newValue);
-            setError(null);
-          }}
-          loading={isSearching}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="ค้นหาสินค้า"
-              placeholder="ค้นหาจาก SKU หรือ ชื่อสินค้า"
-              size="small"
-              InputProps={{
-                ...params.InputProps,
-                endAdornment: (
-                  <>
-                    {isSearching ? <CircularProgress size={20} /> : null}
-                    {params.InputProps.endAdornment}
-                  </>
-                ),
-              }}
-            />
-          )}
-          renderOption={(props, option: Product) => (
-            <li {...props}>
-              <div className="flex flex-col py-1 w-full">
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex-1">
-                    <Typography variant="subtitle2" className="font-semibold mb-1">
-                      {option.sku}
-                    </Typography>
-                    <Typography variant="body2" className="text-gray-600 mb-1">
-                      {option.name}
-                    </Typography>
-
-                  </div>
-                  <div className="flex items-center bg-blue-50 px-2 py-1 rounded">
-                    <Typography variant="caption" color="primary" className="whitespace-nowrap">
-                      คงเหลือ: {option.availablestock}
-                    </Typography>
-                  </div>
-                </div>
-              </div>
-            </li>
-          )}
-        />
-        <TextField
-          label="ราคา"
-          value={priceInput}
-          onChange={(e) => {
-            setPriceInput(e.target.value);
-            setError(null);
-          }}
-          type="number"
-          size="small"
-          sx={{ width: '150px' }}
-          disabled={isProcessing || !selectedProduct}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">฿</InputAdornment>,
-          }}
-        />
-        <Button
-          variant="contained"
-          onClick={handleAddPrice}
-          disabled={isProcessing || !selectedProduct || !priceInput}
-          className="whitespace-nowrap"
-        >
-          เพิ่ม
-        </Button>
-      </div>
-
-      <List className="max-h-[400px] overflow-y-auto">
-        {customPrices.map((price) => (
-          <ListItem
-            key={price.sku}
-            className="border rounded mb-2 hover:bg-gray-50"
-            secondaryAction={
-              <IconButton
-                edge="end"
-                onClick={() => handleRemovePrice(price.sku)}
-                disabled={isProcessing}
-              >
-                <i className="tabler-x" />
-              </IconButton>
-            }
-          >
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <Typography variant="subtitle2" className="font-semibold">{price.sku}</Typography>
-                <Typography variant="body2" color="primary" className="font-semibold">
-                  {price.price.toLocaleString()}฿
-                </Typography>
-              </div>
-              {price.name && (
-                <Typography variant="body2" color="textSecondary">
-                  {price.name}
-                </Typography>
-              )}
-            </div>
-          </ListItem>
-        ))}
-      </List>
-
-      {isProcessing && (
-        <div className="flex justify-center">
-          <CircularProgress size={24} />
-        </div>
-      )}
-
-      {updateResult && (
-        <Typography
-          color="success"
-          className="text-center font-bold"
-        >
-          บันทึกข้อมูลเรียบร้อย
-        </Typography>
-      )}
-    </div>
-  );
 
   return (
     <>
@@ -334,31 +145,130 @@ const CustomPriceDialog: React.FC<CustomPriceDialogProps> = ({ userId, currentPr
         onClose={handleClose}
         maxWidth="sm"
         fullWidth
-        disableEscapeKeyDown
       >
-        <DialogTitle className=" items-center">
-          <p>กำหนดราคาสินค้าเฉพาะ SKU</p>
-          <p className='text-sm'> User ID: {userId}</p>
+        <DialogTitle>
+          <Typography variant="h6">กำหนดราคาสินค้าเฉพาะ SKU</Typography>
+          <Typography variant="caption" color="textSecondary">
+            User ID: {userId}
+          </Typography>
         </DialogTitle>
 
         <DialogContent>
-          <div className="space-y-4 mt-4">
-            {renderContent()}
-          </div>
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="ค้นหาสินค้า"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              size="small"
+              fullWidth
+              placeholder="ค้นหาจาก SKU หรือ ชื่อสินค้า"
+            />
+
+            {searchTerm && searchResults.length > 0 && (
+              <Paper sx={{ p: 2 }}>
+                <ProductSearchAutocomplete
+                  searchData={searchResults}
+                  onProductSelect={handleProductSelect}
+                  isLoading={isSearching}
+                  disabled={isProcessing}
+                  selectedPrices={customPrices}
+                />
+              </Paper>
+            )}
+
+            {error && (
+              <Alert severity="error" onClose={() => setError(null)}>
+                {error}
+              </Alert>
+            )}
+
+            <List>
+              {customPrices.map((price) => (
+                <ListItem
+                  key={price.sku}
+                  sx={{
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    mb: 1
+                  }}
+                  secondaryAction={
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleRemovePrice(price.sku)}
+                      disabled={isProcessing}
+                    >
+                      <i className="tabler-x" />
+                    </IconButton>
+                  }
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                    <Box sx={{ flex: 1 }}>
+                      {/* ข้อมูลสินค้า */}
+                      <Typography variant="subtitle2">{price.sku}</Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {price.name}
+                      </Typography>
+
+                      {/* แสดงราคาปัจจุบัน */}
+                      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {searchResults?.find(p => p.sku === price.sku)?.listPrice?.map(lp => (
+                          <Typography
+                            key={lp.priceId}
+                            variant="caption"
+                            sx={{
+                              bgcolor: 'grey.100',
+                              px: 1,
+                              py: 0.5,
+                              borderRadius: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5
+                            }}
+                          >
+                            <span style={{ color: 'text.secondary' }}>{lp.priceName}:</span>
+                            <span>{lp.price.toLocaleString()}฿</span>
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Box>
+
+                    {/* ช่องกรอกราคาใหม่ */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'end', minWidth: 120 }}>
+                      <TextField
+                        fullWidth
+                        label="ราคาใหม่"
+                        value={price.price || ''}
+                        onChange={(e) => handlePriceChange(price.sku, Number(e.target.value))}
+                        type="number"
+                        size="small"
+                        error={price.price <= 0}
+                        helperText={price.price <= 0 ? 'กรุณาระบุราคา' : ''}
+                        InputProps={{
+                          startAdornment: "฿"
+                        }}
+                        inputProps={{
+                          min: 0,
+                          step: "0.01"
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
         </DialogContent>
 
-        <DialogActions className="p-4">
-          <Button
-            onClick={handleClose}
-            disabled={isProcessing}
-            color="inherit"
-          >
+        <DialogActions>
+          <Button onClick={handleClose} disabled={isProcessing}>
             ยกเลิก
           </Button>
           <Button
-            onClick={onSubmit}
             variant="contained"
-            disabled={isProcessing}  // ลบเงื่อนไข customPrices.length === 0 ออก
+            onClick={handleSubmit}
+            disabled={isProcessing || !isAllPricesValid() || customPrices.length === 0}
+            color="primary"
           >
             {isProcessing ? 'กำลังบันทึก...' : 'บันทึก'}
           </Button>

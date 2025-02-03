@@ -3,10 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { TextField } from '@mui/material';
 
 import { useMultiPriceCartStore } from '@/stores/multiCartStore';
+import { useClientStores } from '@/stores/authStore';
 import type { MultiPriceProduct } from '@/types/multiplePrice';
+import type { ICustomPrice } from '@/types/productTypes';
 
 interface PropsMultiPriceAddToCart {
   product: MultiPriceProduct;
+  customPrice: ICustomPrice | undefined;
 }
 
 const MultiPriceAddToCart: React.FC<PropsMultiPriceAddToCart> = ({ product }) => {
@@ -16,32 +19,42 @@ const MultiPriceAddToCart: React.FC<PropsMultiPriceAddToCart> = ({ product }) =>
     getItemQuantity,
     recalculateBaseTotalCart,
     items,
-    updateItemPrice // เพิ่ม updateItemPrice
+    updateItemPrice,
+
+    // getCustomPrice
   } = useMultiPriceCartStore();
 
+  const { user } = useClientStores();
   const [quantity, setQuantity] = useState(0);
+  const customPrice = user?.customPrices?.find(cp => cp.sku === product.sku)?.price;
 
   // ตรวจสอบและอัพเดทราคาถ้ามีการเปลี่ยนแปลง
   useEffect(() => {
     const cartItem = items.find(item => item.sku === product.sku);
 
     if (cartItem) {
-      const newPrices = product.prices.reduce((acc, price) => ({
-        ...acc,
-        [price.priceId]: price.price
-      }), {});
+      const newPrices = customPrice
+        ? Object.keys(cartItem.prices).reduce((acc, key) => ({
+          ...acc,
+          [key]: customPrice
+        }), {})
+        : product.prices.reduce((acc, price) => ({
+          ...acc,
+          [price.priceId]: price.price
+        }), {});
 
-      // เปรียบเทียบราคาเก่าและใหม่
-      const pricesChanged = product.prices.some(price =>
-        cartItem.prices[price.priceId] !== price.price
-      );
+      const pricesChanged = customPrice
+        ? Object.values(cartItem.prices).some(price => price !== customPrice)
+        : product.prices.some(price =>
+          cartItem.prices[price.priceId] !== price.price
+        );
 
       if (pricesChanged) {
         updateItemPrice(product.sku, newPrices);
         recalculateBaseTotalCart();
       }
     }
-  }, [product.prices, product.sku, items, updateItemPrice, recalculateBaseTotalCart]);
+  }, [product.prices, product.sku, items, updateItemPrice, recalculateBaseTotalCart, customPrice]);
 
   useEffect(() => {
     const currentQuantity = getItemQuantity(product.sku);

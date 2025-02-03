@@ -1,6 +1,7 @@
 import type { ObjectId } from "mongodb";
 
 import type { ShippingAddress } from "./shippingTypes";
+import type { ICustomPrice } from "./productTypes";
 
 interface AccessiblePrice {
   id: string;
@@ -21,10 +22,7 @@ export interface TypeClient {
   updatedAt?: Date;
   pin?: string; // เพิ่มสำหรับเก็บ PIN
   isPinVerified?: boolean; // เพิ่มสำหรับเช็คว่าเคยใส่ PIN แล้วหรือยัง
-  customPrices?: {
-    sku: string;
-    price: number;
-  }[];
+  customPrices?: ICustomPrice[];
 }
 
 

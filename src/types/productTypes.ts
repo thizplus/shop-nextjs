@@ -88,3 +88,26 @@ export type TypesProductWholesale = {
   createdAt: Date;
   updatedAt: Date;
 }
+
+
+export interface ISearchProduct {
+  _id: string;
+  sku: string;
+  name: string;
+  availablestock: number;
+  category?: string;
+  imagepath?: string | null;
+  listPrice?: Array<{
+    priceId: string;
+    priceName: string;
+    price: number;
+  }>;
+}
+
+export interface ICustomPrice {
+  sku: string;
+  price: number;
+  name?: string;
+  _id?: ObjectId;
+}
+
