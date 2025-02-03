@@ -61,7 +61,7 @@ const DialogOrderDetail = ({ order }: DialogOrderDetailProps) => {
               <div className="font-medium mb-2">ข้อมูลคำสั่งซื้อ</div>
               <div className="text-sm leading-none">
                 <div>
-                  <div className="">วันที่สั่งซื้อ : {formatThaiDateTime(order.createdAt.toLocaleString())}</div>
+                  <div className="">วันที่สั่งซื้อ : {order?.createdAt ? formatThaiDateTime(order.createdAt.toLocaleString()) : '-'}</div>
 
                 </div>
 

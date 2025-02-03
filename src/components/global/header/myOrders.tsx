@@ -84,7 +84,7 @@ const MyOrders = ({ profile, priceId }: propsMyOrders) => {
               <div key={order.orderId} className="border-b py-2 flex justify-between">
                 <div className='leading-none'>
                   <p className='text-sm font-bold leading-none block'>{order.orderId}</p>
-                  <p className='text-xs'>{formatThaiDateTime(order.createdAt.toString())}</p>
+                  <p className='text-xs'>{order?.createdAt ? formatThaiDateTime(order.createdAt.toLocaleString()) : '-'}</p>
                   <OrderDetail order={order} />
 
 

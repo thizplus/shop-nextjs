@@ -196,7 +196,7 @@ const MainOrders = () => {
       <EnhancedTable<TypeOrder>
         columns={columns}
         data={data.items}
-        getRowId={(row) => row._id.toString()}
+        getRowId={(row) => row._id?.toString() ?? ''}
         page={page}
         rowsPerPage={rowsPerPage}
         rowsPerPageOptions={rowsPerPageOptions}
