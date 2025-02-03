@@ -22,11 +22,11 @@ const AddToCart: React.FC<PropsAddToCart> = ({ items, priceId }) => {
 
   useEffect(() => {
     if (quantity > 0) {
-      // อัพเดทราคาและ availablestock ทุกครั้งที่ items เปลี่ยน
-      updateItemPrice(priceId, items.sku, items.price ?? 0);
+      // ปรับจาก items.price เป็น price (ที่รวม customPrice แล้ว)
+      updateItemPrice(priceId, items.sku, price);
       updateItemQuantity(priceId, items.sku, Math.min(quantity, items.availablestock));
     }
-  }, [items, priceId, quantity, updateItemPrice, updateItemQuantity]);
+  }, [items, priceId, quantity, updateItemPrice, updateItemQuantity, price]); // เพิ่ม price ใน dependencies
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newQuantity = Math.min(parseInt(event.target.value) || 0, items.availablestock);
@@ -51,8 +51,7 @@ const AddToCart: React.FC<PropsAddToCart> = ({ items, priceId }) => {
       addItem(priceId, {
         ...items,
         qty: newQuantity,
-        price: price,
-        customPrice: customPrice
+        price: customPrice || items.price, // ใช้ customPrice ถ้ามี
       });
     } else {
       updateItemQuantity(priceId, items.sku, newQuantity);

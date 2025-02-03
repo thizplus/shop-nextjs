@@ -228,9 +228,9 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
         listProducts: filteredItems.map(item => ({
           sku: item.sku,
           name: item.name,
-          price: item.price,
+          price: item.customPrice || item.price,
           qty: item.qty,
-          total: item.price * item.qty
+          total: item.qty * (item.customPrice || item.price)
         })),
         shippingInfo: {
           _id: selectedAddress._id || 'default_id',
@@ -368,7 +368,14 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
                   )}
                   <div className='leading-none'>
                     <p className="font-semibold text-sm">{item.name}</p>
-                    <p className='text-xs'>ราคา: {formatNumber(item.price)} | คงเหลือ: {item.availablestock}</p>
+                    <p className='text-xs'>
+                      {item.customPrice ? (
+                        <span className="text-green-600">ราคาพิเศษ: {formatNumber(item.customPrice)} </span>
+                      ) : (
+                        <span>ราคา: {formatNumber(item.price)}</span>
+                      )}
+                      | คงเหลือ: {item.availablestock}
+                    </p>
                     <div className='flex items-center justify-between'>
                       <div className='flex justify-between mt-2'>
                         <p onClick={() => handleQuantityChange(item.sku, item.qty - 1)} className='flex p-0 my-auto cursor-pointer'> <i className="tabler-minus"></i></p>
@@ -387,7 +394,7 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
                         <p onClick={() => handleQuantityChange(item.sku, item.qty + 1)} className='flex p-0 my-auto cursor-pointer'> <i className="tabler-plus"></i></p>
                       </div>
                       <p className="mt-4 text-sm text-right">
-                        รวม: {formatNumber(item.qty * item.price)}
+                        รวม: {formatNumber(item.qty * (item.customPrice || item.price))}
                       </p>
                     </div>
                   </div>
