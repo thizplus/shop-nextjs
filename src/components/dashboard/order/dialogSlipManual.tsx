@@ -108,7 +108,7 @@ const DialogSlipManual = ({ order, onSuccess }: DialogSlipManualProps) => {
         onClick={handleClickOpen}
         startIcon={<i className='tabler-receipt-2' />}
         size='small'
-        color='warning'
+        color='info'
       >
         แนบสลิป
       </Button>

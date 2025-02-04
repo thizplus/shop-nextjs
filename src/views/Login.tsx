@@ -22,6 +22,8 @@ import classnames from 'classnames'
 
 // Type Imports
 
+import { Alert, Snackbar } from '@mui/material';
+
 import type { SystemMode } from '@core/types'
 
 // Component Imports
@@ -99,6 +101,11 @@ const LoginV2 = ({ mode }: { mode: SystemMode }) => {
     borderedDarkIllustration
   )
 
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'error' as 'error' | 'success'
+  });
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
@@ -111,18 +118,34 @@ const LoginV2 = ({ mode }: { mode: SystemMode }) => {
     }));
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleLogin();
+    }
+  };
+
   const handleLogin = async () => {
     try {
       const res = await actionLogin(formData);
 
-      if (res.token) {
+      if (res.status) {
+        document.cookie = `token=${res.token}; path=/;`
         router.push('/dashboard');
+      } else {
+        setSnackbar({
+          open: true,
+          message: res.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+          severity: 'error'
+        });
       }
-
     } catch (error) {
-      console.error('Login failed:', error);
+      setSnackbar({
+        open: true,
+        message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ',
+        severity: 'error'
+      });
     }
-  }
+  };
 
 
   return (
@@ -170,6 +193,7 @@ const LoginV2 = ({ mode }: { mode: SystemMode }) => {
             type={isPasswordShown ? 'text' : 'password'}
             value={formData.password}
             onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             InputProps={{
               endAdornment: (
                 <InputAdornment position='end'>
@@ -201,6 +225,18 @@ const LoginV2 = ({ mode }: { mode: SystemMode }) => {
 
         </div>
       </div>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
     </div>
   )
 }

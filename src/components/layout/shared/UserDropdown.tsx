@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 // MUI Imports
 import { styled } from '@mui/material/styles'
 import Badge from '@mui/material/Badge'
-import Avatar from '@mui/material/Avatar'
+
 import Popper from '@mui/material/Popper'
 import Fade from '@mui/material/Fade'
 import Paper from '@mui/material/Paper'
@@ -23,6 +23,8 @@ import Button from '@mui/material/Button'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import CustomAvatar from '@/@core/components/mui/Avatar'
+import ChangePasswordDialog from './ChangePasswordDialog'
 
 // Styled component for badge content
 const BadgeContentSpan = styled('span')({
@@ -37,12 +39,15 @@ const BadgeContentSpan = styled('span')({
 const UserDropdown = () => {
   // States
   const [open, setOpen] = useState(false)
+  const [openChangePassword, setOpenChangePassword] = useState(false);
 
   // Refs
   const anchorRef = useRef<HTMLDivElement>(null)
 
   // Hooks
   const router = useRouter()
+
+
 
   const { settings } = useSettings()
 
@@ -63,9 +68,11 @@ const UserDropdown = () => {
   }
 
   const handleUserLogout = async () => {
-    // Redirect to login page
-    router.push('/login')
-  }
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    router.push('/login');
+  };
 
   return (
     <>
@@ -76,13 +83,16 @@ const UserDropdown = () => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         className='mis-2'
       >
-        <Avatar
+
+
+
+        <CustomAvatar
           ref={anchorRef}
-          alt='John Doe'
-          src='/images/avatars/1.png'
           onClick={handleDropdownOpen}
           className='cursor-pointer bs-[38px] is-[38px]'
-        />
+          color='primary'
+        >{process.env.NEXT_PUBLIC_SITE_CODE}</CustomAvatar>
+
       </Badge>
       <Popper
         open={open}
@@ -103,31 +113,25 @@ const UserDropdown = () => {
               <ClickAwayListener onClickAway={e => handleDropdownClose(e as MouseEvent | TouchEvent)}>
                 <MenuList>
                   <div className='flex items-center plb-2 pli-6 gap-2' tabIndex={-1}>
-                    <Avatar alt='John Doe' src='/images/avatars/1.png' />
+                    <CustomAvatar color='primary'>{process.env.NEXT_PUBLIC_SITE_CODE}</CustomAvatar>
                     <div className='flex items-start flex-col'>
                       <Typography className='font-medium' color='text.primary'>
-                        John Doe
+                        {process.env.NEXT_PUBLIC_SITE_NAME}
                       </Typography>
-                      <Typography variant='caption'>admin@vuexy.com</Typography>
+                      <Typography variant='caption'>Admministrator</Typography>
                     </div>
                   </div>
                   <Divider className='mlb-1' />
-                  <MenuItem className='mli-2 gap-3' onClick={e => handleDropdownClose(e)}>
-                    <i className='tabler-user text-[22px]' />
-                    <Typography color='text.primary'>My Profile</Typography>
-                  </MenuItem>
-                  <MenuItem className='mli-2 gap-3' onClick={e => handleDropdownClose(e)}>
+
+                  <MenuItem
+                    className='mli-2 gap-3'
+                    onClick={() => setOpenChangePassword(true)}
+                  >
                     <i className='tabler-settings text-[22px]' />
-                    <Typography color='text.primary'>Settings</Typography>
+                    <Typography color='text.primary'>แก้ไขรหัสผ่าน</Typography>
                   </MenuItem>
-                  <MenuItem className='mli-2 gap-3' onClick={e => handleDropdownClose(e)}>
-                    <i className='tabler-currency-dollar text-[22px]' />
-                    <Typography color='text.primary'>Pricing</Typography>
-                  </MenuItem>
-                  <MenuItem className='mli-2 gap-3' onClick={e => handleDropdownClose(e)}>
-                    <i className='tabler-help-circle text-[22px]' />
-                    <Typography color='text.primary'>FAQ</Typography>
-                  </MenuItem>
+
+
                   <div className='flex items-center plb-2 pli-3'>
                     <Button
                       fullWidth
@@ -138,15 +142,25 @@ const UserDropdown = () => {
                       onClick={handleUserLogout}
                       sx={{ '& .MuiButton-endIcon': { marginInlineStart: 1.5 } }}
                     >
-                      Logout
+                      ออกจากระบบ
                     </Button>
                   </div>
                 </MenuList>
               </ClickAwayListener>
+
+
+
             </Paper>
           </Fade>
         )}
+
+
       </Popper>
+
+      <ChangePasswordDialog
+        open={openChangePassword}
+        onClose={() => setOpenChangePassword(false)}
+      />
     </>
   )
 }

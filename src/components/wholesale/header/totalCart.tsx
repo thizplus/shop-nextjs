@@ -453,7 +453,7 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
               <div className="font-semibold">สินค้าคงเหลือไม่เพียงพอ:</div>
               {insufficientStock.map((item, index) => (
                 <div key={index} className="text-sm">
-                  {item.name} (มีในสต็อก: {item.available})
+                  {item.name}
                 </div>
               ))}
             </Alert>

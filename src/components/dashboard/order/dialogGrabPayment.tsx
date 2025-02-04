@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 
-import {
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Typography,
-  Grid,
-  CircularProgress,
-  Alert
-} from '@mui/material';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import type { TypeOrder } from "@/types/orderTypes";
 import useGrabPayment from '@/actions/backend/orders/useGrabPayment';
+import formatThaiDateTime from '@/components/global/functions/formatThaiDateTime';
+import { formatNumber } from '@/components/global/functions/numberFormat';
 
 interface DialogGrabPaymentProps {
   order: TypeOrder;
@@ -74,113 +72,95 @@ const DialogGrabPayment: React.FC<DialogGrabPaymentProps> = ({ order }) => {
     }
   };
 
-  const renderContent = () => {
-    if (isGrabProcessing) {
-      return (
-        <Grid container spacing={2}>
-          <Grid item xs={4}>
-            <Typography>สถานะ:</Typography>
-          </Grid>
-          <Grid item xs={8}>
-            <Typography>กำลังเรียกเก็บเงิน</Typography>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Typography>จำนวนเงิน:</Typography>
-          </Grid>
-          <Grid item xs={8}>
-            <Typography>{order.grabPayment?.amount} บาท</Typography>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Typography>วันที่อัพเดท:</Typography>
-          </Grid>
-          <Grid item xs={8}>
-            <Typography>
-              {new Date(order.grabPayment?.updatedAt || '').toLocaleString('th-TH')}
-            </Typography>
-          </Grid>
-
-          {order.grabPayment?.note && (
-            <>
-              <Grid item xs={4}>
-                <Typography>หมายเหตุ:</Typography>
-              </Grid>
-              <Grid item xs={8}>
-                <Typography>{order.grabPayment.note}</Typography>
-              </Grid>
-            </>
-          )}
-        </Grid>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        {error && (
-          <Alert severity="error" className="mb-4">
-            {error}
-          </Alert>
-        )}
-
-        <TextField
-          fullWidth
-          label="จำนวนเงิน"
-          type="text"
-          value={amount}
-          onChange={(e) => {
-            handleAmountChange(e);
-            setError(null);
-          }}
-          disabled={isProcessing}
-          size="small"
-          error={!!error && !amount}
-          helperText={error && !amount ? 'กรุณาระบุจำนวนเงิน' : ''}
-          InputProps={{
-            startAdornment: '฿',
-          }}
-        />
-
-        <TextField
-          fullWidth
-          label="หมายเหตุ"
-          multiline
-          rows={3}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          disabled={isProcessing}
-          size="small"
-          placeholder="ระบุหมายเหตุ (ถ้ามี)"
-        />
-
-        {isProcessing && (
-          <div className="flex justify-center">
-            <CircularProgress size={24} />
+  const renderProcessingContent = () => (
+    <div className="border rounded-lg p-4">
+      <div className="font-medium mb-2">รายละเอียดการชำระเงิน</div>
+      <div className="text-sm leading-none space-y-2">
+        <div>
+          <div className="">สถานะ : กำลังเรียกเก็บเงิน</div>
+        </div>
+        <div>
+          <div className="">จำนวนเงิน : {formatNumber(order.grabPayment?.amount || 0)} บาท</div>
+        </div>
+        <div>
+          <div className="">วันที่อัพเดท : {order.grabPayment?.updatedAt ? formatThaiDateTime(order.grabPayment.updatedAt.toLocaleString()) : '-'}</div>
+        </div>
+        {order.grabPayment?.note && (
+          <div>
+            <div className="">หมายเหตุ : {order.grabPayment.note}</div>
           </div>
         )}
-
-        {updateResult && (
-          <Typography
-            color={updateResult.includes('เรียบร้อย') ? 'success' : 'error'}
-            className='text-center font-bold'
-          >
-            {updateResult}
-          </Typography>
-        )}
       </div>
-    );
-  };
+    </div>
+  );
+
+  const renderInputContent = () => (
+    <div className="space-y-4">
+      {error && (
+        <Alert severity="error" className="mb-4">
+          {error}
+        </Alert>
+      )}
+
+      <div className="border rounded-lg p-4">
+        <div className="font-medium mb-2">จัดการค่าส่ง Grab</div>
+        <div className="space-y-4">
+          <TextField
+            fullWidth
+            label="จำนวนเงิน"
+            type="text"
+            value={amount}
+            onChange={(e) => {
+              handleAmountChange(e);
+              setError(null);
+            }}
+            disabled={isProcessing}
+            size="small"
+            error={!!error && !amount}
+            helperText={error && !amount ? 'กรุณาระบุจำนวนเงิน' : ''}
+            InputProps={{
+              startAdornment: '฿',
+            }}
+          />
+
+          <TextField
+            fullWidth
+            label="หมายเหตุ"
+            multiline
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            disabled={isProcessing}
+            size="small"
+            placeholder="ระบุหมายเหตุ (ถ้ามี)"
+          />
+        </div>
+      </div>
+
+      {isProcessing && (
+        <div className="flex justify-center">
+          <CircularProgress size={24} />
+        </div>
+      )}
+
+      {updateResult && (
+        <div className={`text-center font-medium ${updateResult.includes('เรียบร้อย') ? 'text-green-600' : 'text-red-600'}`}>
+          {updateResult}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <>
       <Button
-        variant={isGrabProcessing ? "outlined" : "contained"}
-        color={isGrabProcessing ? "info" : "primary"}
+        variant="contained"
+        color={isGrabProcessing ? "warning" : "error"}
         onClick={() => setOpen(true)}
         startIcon={<i className={`tabler-${isGrabProcessing ? 'info-circle' : 'coin'}`} />}
         size="small"
       >
-        {isGrabProcessing ? 'Grab' : 'Grab'}
+        Grab
       </Button>
 
       <Dialog
@@ -188,27 +168,29 @@ const DialogGrabPayment: React.FC<DialogGrabPaymentProps> = ({ order }) => {
         onClose={handleClose}
         maxWidth="sm"
         fullWidth
-        disableEscapeKeyDown
+        aria-labelledby="grab-payment-dialog-title"
       >
-        <DialogTitle className="flex justify-between items-center">
-          {isGrabProcessing ? 'รายละเอียดค่าส่ง Grab' : 'จัดการค่าส่ง Grab'}
-          <Typography variant="body2" color="textSecondary">
-            Order ID: {order.orderId}
-          </Typography>
+        <DialogTitle id="grab-payment-dialog-title">
+          <div className="flex justify-between items-center">
+            <div className="text-lg font-medium">
+              Order ID: {order.orderId}
+            </div>
+          </div>
         </DialogTitle>
 
         <DialogContent>
-          <div className="space-y-4 mt-4">
-            {renderContent()}
+          <div className="space-y-4">
+            {isGrabProcessing ? renderProcessingContent() : renderInputContent()}
           </div>
         </DialogContent>
 
-        <DialogActions className="p-4">
+        <DialogActions className="dialog-actions-dense">
           <Button
             onClick={handleClose}
             disabled={isProcessing}
             color="error"
-            variant='contained'
+            variant="outlined"
+            size="small"
           >
             {isGrabProcessing ? 'ปิด' : 'ยกเลิก'}
           </Button>
@@ -217,6 +199,7 @@ const DialogGrabPayment: React.FC<DialogGrabPaymentProps> = ({ order }) => {
               onClick={onSubmit}
               variant="contained"
               disabled={isProcessing || !amount}
+              size="small"
             >
               {isProcessing ? 'กำลังบันทึก...' : 'บันทึก'}
             </Button>

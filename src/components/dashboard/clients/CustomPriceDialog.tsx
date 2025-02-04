@@ -267,7 +267,7 @@ const CustomPriceDialog: React.FC<CustomPriceDialogProps> = ({
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={isProcessing || !isAllPricesValid() || customPrices.length === 0}
+            disabled={isProcessing || !isAllPricesValid()}
             color="primary"
           >
             {isProcessing ? 'กำลังบันทึก...' : 'บันทึก'}

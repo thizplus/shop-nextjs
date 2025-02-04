@@ -17,7 +17,9 @@ const actionLogin = async (formData: TypesLogin) => {
     const results = await response.json();
 
     if (results.status) {
-      // Register shop after successful login
+      localStorage.setItem('token', results.token);
+      localStorage.setItem('username', results.user.username);
+
       await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/shops/register`, {
         method: 'POST',
         headers: {
