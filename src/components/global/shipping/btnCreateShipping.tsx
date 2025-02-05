@@ -7,6 +7,8 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 
+import { Alert, Snackbar } from '@mui/material';
+
 import { addShippingAddress } from '@/actions/client/shipping';
 
 interface BtnCreateShippingProps {
@@ -15,6 +17,7 @@ interface BtnCreateShippingProps {
 
 const BtnCreateShipping: React.FC<BtnCreateShippingProps> = ({ onAddressAdded }) => {
   const [open, setOpen] = useState<boolean>(false);
+  const [phoneError, setPhoneError] = useState<string>('');
 
   const [newAddress, setNewAddress] = useState({
     cusName: '',
@@ -27,13 +30,44 @@ const BtnCreateShipping: React.FC<BtnCreateShippingProps> = ({ onAddressAdded })
     location: ''
   });
 
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  const handleSnackbarClose = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
   const handleClickOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
-    setNewAddress(prev => ({ ...prev, [name]: value }));
+    if (name === 'cusTel') {
+      // อนุญาตให้กรอกได้เฉพาะตัวเลข
+      const numbersOnly = value.replace(/[^0-9]/g, '');
+
+      // จำกัดความยาวไม่เกิน 10 หลัก
+      const truncated = numbersOnly.slice(0, 10);
+
+      // เช็คความยาวเพื่อแสดง error
+      if (truncated.length !== 10 && truncated.length > 0) {
+        setPhoneError('กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก');
+      } else {
+        setPhoneError('');
+      }
+
+      setNewAddress(prev => ({ ...prev, [name]: truncated }));
+    } else {
+      setNewAddress(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleCreateShipping = async () => {
@@ -47,7 +81,12 @@ const BtnCreateShipping: React.FC<BtnCreateShippingProps> = ({ onAddressAdded })
       newAddress.province.trim() === '' ||
       newAddress.zipcode.trim() === ''
     ) {
-      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+
+      setSnackbar({
+        open: true,
+        message: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+        severity: 'warning'
+      });
 
       return;
     }
@@ -104,6 +143,12 @@ const BtnCreateShipping: React.FC<BtnCreateShippingProps> = ({ onAddressAdded })
             size='small'
             value={newAddress.cusTel}
             onChange={handleInputChange}
+            error={Boolean(phoneError)}
+            helperText={phoneError}
+            inputProps={{
+              maxLength: 10,
+              pattern: '[0-9]*'
+            }}
           />
           <TextField
             margin="dense"
@@ -180,7 +225,7 @@ const BtnCreateShipping: React.FC<BtnCreateShippingProps> = ({ onAddressAdded })
             variant='contained'
             disabled={
               newAddress.cusName.trim() === '' ||
-              newAddress.cusTel.trim() === '' ||
+              newAddress.cusTel.trim().length !== 10 ||  // เพิ่มเงื่อนไขนี้
               newAddress.addressNo.trim() === '' ||
               newAddress.district.trim() === '' ||
               newAddress.amphoe.trim() === '' ||
@@ -193,6 +238,25 @@ const BtnCreateShipping: React.FC<BtnCreateShippingProps> = ({ onAddressAdded })
           <Button onClick={handleClose}>ยกเลิก</Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{
+            width: '100%',
+            boxShadow: 3,
+            borderRadius: 2
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

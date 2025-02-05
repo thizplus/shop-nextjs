@@ -161,6 +161,10 @@ const UploadSlip: React.FC<propsOrder> = ({ order, onPaymentUpdate, currentPayme
           </Typography>
           <CountdownTimer expireDate={order.expire} onExpire={onExpire} />
           <p className='text-xs text-center mt-2'>
+            สามารถแนบสลิปได้ไม่จำกัดจนกว่าจะครบยอด
+          </p>
+
+          <p className='text-xs text-center mt-2'>
             สลิปที่ไม่มี QR CODE ไม่สามารถตรวจสอบยอดชำระได้ กรุณาส่งหลักฐานให้แอดมิน
           </p>
         </div>
