@@ -17,22 +17,17 @@ const actionVoidOrder = async ({ orderId }: VoidOrderParams): Promise<VoidOrderR
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
-
-        // ถ้ามีการใช้ token สำหรับ authentication ให้เพิ่ม header ตรงนี้
-        // 'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ orderId })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
+    const data = await response.json();
 
-      throw new Error(errorData.message || 'Failed to void order');
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to void order');
     }
 
-    const voidOrderData: VoidOrderResponse = await response.json();
-
-    return voidOrderData;
+    return data;
   } catch (error) {
     console.error('Error voiding order:', error);
     throw error;

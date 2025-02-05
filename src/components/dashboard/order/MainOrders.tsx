@@ -17,6 +17,7 @@ import StatusLabel from '@/components/global/statusLabel';
 import formatThaiDateTime from '@/components/global/functions/formatThaiDateTime';
 import DialogSlipManual from './dialogSlipManual';
 import DialogGrabPayment from './dialogGrabPayment';
+import ShippingLabel from '@/components/global/shippingLabel';
 
 const columns: Column<TypeOrder>[] = [
   {
@@ -37,7 +38,7 @@ const columns: Column<TypeOrder>[] = [
     numeric: false,
     disablePadding: false,
     label: 'จัดส่ง',
-    format: (value) => value
+    format: (value) => <ShippingLabel status={value} />
   },
 
   {
