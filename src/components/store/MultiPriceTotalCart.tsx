@@ -1,48 +1,46 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContentText from '@mui/material/DialogContentText';
-import TextField from '@mui/material/TextField';
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContentText from '@mui/material/DialogContentText'
+import TextField from '@mui/material/TextField'
+import Snackbar from '@mui/material/Snackbar'
+import Alert from '@mui/material/Alert'
 
-import { useMultiPriceCartStore } from '@/stores/multiCartStore';
-import { useConfigStore } from '@/stores/configStore';
-import { useClientStores } from '@/stores/authStore';
-import { useShippingStore } from '@/stores/shippingStore';
-import { formatNumber } from '@/components/global/functions/numberFormat';
-import ShippingInfo from '@/components/global/shipping/shippingInfo';
-import actionCreateOrder from '@/actions/backend/orders/actionOrder';
+import { useMultiPriceCartStore } from '@/stores/multiCartStore'
+import { useConfigStore } from '@/stores/configStore'
+import { useClientStores } from '@/stores/authStore'
+import { useShippingStore } from '@/stores/shippingStore'
+import { formatNumber } from '@/components/global/functions/numberFormat'
+import ShippingInfo from '@/components/global/shipping/shippingInfo'
+import actionCreateOrder from '@/actions/backend/orders/actionOrder'
 
 //import { sendLineNotification } from '@/actions/global/lineNotification';
 //import { sendLineFlexMessage } from '@/actions/global/lineFlexMessage';
 
-import { sendOrderToWarehouse } from '@/actions/zortout/actionWarehouse';
-import type { TypeOrder } from '@/types/orderTypes';
-import Payment from '../global/header/payment';
-import { useMultiPriceUpdate } from '@/actions/store/useMultiPriceUpdate';
+import { sendOrderToWarehouse } from '@/actions/zortout/actionWarehouse'
+import type { TypeOrder } from '@/types/orderTypes'
+import Payment from '../global/header/payment'
+import { useMultiPriceUpdate } from '@/actions/store/useMultiPriceUpdate'
 
-import { checkWarehouseStock } from '@/actions/backend/orders/checkWarehouseStock';
-import { useShippingMethodStore } from '@/stores/shippingMethodStore';
+import { checkWarehouseStock } from '@/actions/backend/orders/checkWarehouseStock'
+import { useShippingMethodStore } from '@/stores/shippingMethodStore'
 
-import ShippingMethodSelector from '../global/shipping/ShippingMethodSelector';
-import { getClientDeliveryStatus } from '@/actions/client/clientDeliveryStatus';
-import CouponSection from '../global/coupon/CouponSection';
-import type { IClientCoupon } from '@/types/couponTypes';
+import ShippingMethodSelector from '../global/shipping/ShippingMethodSelector'
+import { getClientDeliveryStatus } from '@/actions/client/clientDeliveryStatus'
+import CouponSection from '../global/coupon/CouponSection'
+import type { IClientCoupon } from '@/types/couponTypes'
 
 const MultiPriceTotalCart: React.FC = () => {
-
-
-  const { user } = useClientStores();
-  const { method } = useShippingMethodStore();
+  const { user } = useClientStores()
+  const { method } = useShippingMethodStore()
 
   const [deliveryStatus, setDeliveryStatus] = useState<{ enableGrabDelivery: boolean }>({
     enableGrabDelivery: false
-  });
+  })
 
   const {
     items,
@@ -54,180 +52,179 @@ const MultiPriceTotalCart: React.FC = () => {
     getApplicablePrice,
     baseTotalCart,
     recalculateBaseTotalCart
-  } = useMultiPriceCartStore();
+  } = useMultiPriceCartStore()
 
-  const { config, loading, error, fetchConfig } = useConfigStore();
-  const { selectedAddress } = useShippingStore();
-  const [open, setOpen] = useState<boolean>(false);
-  const [isProcess, setIsProcess] = useState<boolean>(false);
-  const [payment, setPayment] = useState<TypeOrder | undefined>(undefined);
-  const [localTotalAmount, setLocalTotalAmount] = useState<number>(0);
-  const [localBaseTotalCart, setLocalBaseTotalCart] = useState<number>(0);
+  const { config, loading, error, fetchConfig } = useConfigStore()
+  const { selectedAddress } = useShippingStore()
+  const [open, setOpen] = useState<boolean>(false)
+  const [isProcess, setIsProcess] = useState<boolean>(false)
+  const [payment, setPayment] = useState<TypeOrder | undefined>(undefined)
+  const [localTotalAmount, setLocalTotalAmount] = useState<number>(0)
+  const [localBaseTotalCart, setLocalBaseTotalCart] = useState<number>(0)
 
-
-  const [couponDiscount, setCouponDiscount] = useState(0);
-  const [selectedCoupon, setSelectedCoupon] = useState<IClientCoupon | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [selectedCoupon, setSelectedCoupon] = useState<IClientCoupon | null>(null)
 
   const [insufficientStock, setInsufficientStock] = useState<Array<{
-    name: string;
-    available: number;
-  }> | null>(null);
+    name: string
+    available: number
+  }> | null>(null)
 
-  const { updateCartPrices } = useMultiPriceUpdate();
+  const { updateCartPrices } = useMultiPriceUpdate()
 
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
     severity: 'success'
-  });
+  })
 
   const priceList = useMemo(() => {
-    if (!config) return [];
+    if (!config) return []
 
-    return [...config.saleModel.listPrice].sort((a, b) => a.minPurchase - b.minPurchase);
-  }, [config]);
+    return [...config.saleModel.listPrice].sort((a, b) => a.minPurchase - b.minPurchase)
+  }, [config])
 
-  const basePrice = useMemo(() => priceList[0], [priceList]);
+  const basePrice = useMemo(() => priceList[0], [priceList])
 
   useEffect(() => {
     if (!config) {
-      fetchConfig();
+      fetchConfig()
     }
-  }, [config, fetchConfig]);
+  }, [config, fetchConfig])
 
   useEffect(() => {
     const fetchDeliveryStatus = async () => {
       if (user?.userId) {
         try {
-          const status = await getClientDeliveryStatus();
+          const status = await getClientDeliveryStatus()
 
-          setDeliveryStatus(status);
+          setDeliveryStatus(status)
         } catch (error) {
-          console.error('Failed to fetch delivery status:', error);
+          console.error('Failed to fetch delivery status:', error)
           setSnackbar({
             open: true,
             message: 'ไม่สามารถตรวจสอบสถานะการจัดส่งได้',
             severity: 'error'
-          });
+          })
         }
       }
-    };
+    }
 
-    fetchDeliveryStatus();
-  }, [user?.userId]); // เพิ่ม dependency เป็น user?.userId
+    fetchDeliveryStatus()
+  }, [user?.userId]) // เพิ่ม dependency เป็น user?.userId
 
   useEffect(() => {
-    setLocalTotalAmount(getTotalAmount());
-    setLocalBaseTotalCart(baseTotalCart);
+    setLocalTotalAmount(getTotalAmount())
+    setLocalBaseTotalCart(baseTotalCart)
 
     //  console.log('Updated total amount:', getTotalAmount());
     // console.log('Updated base total cart:', baseTotalCart);
     //  console.log('Applicable price ID:', getApplicablePrice());
-  }, [getTotalAmount, baseTotalCart, getApplicablePrice]);
+  }, [getTotalAmount, baseTotalCart, getApplicablePrice])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const applicablePriceId = useMemo(() => getApplicablePrice(), [getApplicablePrice, localBaseTotalCart]);
+  const applicablePriceId = useMemo(() => getApplicablePrice(), [getApplicablePrice, localBaseTotalCart])
 
   const applicablePriceName = useMemo(() => {
-    if (!config) return '';
-    const priceConfig = config.saleModel.listPrice.find(p => p.id === applicablePriceId);
+    if (!config) return ''
+    const priceConfig = config.saleModel.listPrice.find(p => p.id === applicablePriceId)
 
-
-    return priceConfig ? priceConfig.name : 'ราคาปกติ';
-  }, [config, applicablePriceId]);
+    return priceConfig ? priceConfig.name : 'ราคาปกติ'
+  }, [config, applicablePriceId])
 
   const handleClickOpen = async () => {
-    setOpen(true);
+    setOpen(true)
 
     try {
-      const updated = await updateCartPrices();
+      const updated = await updateCartPrices()
 
       if (updated) {
         // อัพเดท local state หลังจากอัพเดทราคา
-        setLocalTotalAmount(getTotalAmount());
-        setLocalBaseTotalCart(recalculateBaseTotalCart());
+        setLocalTotalAmount(getTotalAmount())
+        setLocalBaseTotalCart(recalculateBaseTotalCart())
       }
     } catch (err) {
-      console.error('Failed to update prices:', err);
+      console.error('Failed to update prices:', err)
       setSnackbar({
         open: true,
         message: 'ไม่สามารถอัพเดทราคาสินค้าได้',
         severity: 'error'
-      });
+      })
     }
-  };
+  }
 
-  const handleClose = (): void => setOpen(false);
+  const handleClose = (): void => setOpen(false)
 
-  const handleQuantityChange = useCallback((sku: string, newQuantity: number): void => {
-    if (newQuantity === 0) {
-      removeItem(sku);
-    } else {
-      updateItemQuantity(sku, newQuantity);
-    }
+  const handleQuantityChange = useCallback(
+    (sku: string, newQuantity: number): void => {
+      if (newQuantity === 0) {
+        removeItem(sku)
+      } else {
+        updateItemQuantity(sku, newQuantity)
+      }
 
-    setLocalTotalAmount(getTotalAmount());
-    setLocalBaseTotalCart(recalculateBaseTotalCart());
-  }, [removeItem, updateItemQuantity, getTotalAmount, recalculateBaseTotalCart]);
+      setLocalTotalAmount(getTotalAmount())
+      setLocalBaseTotalCart(recalculateBaseTotalCart())
+    },
+    [removeItem, updateItemQuantity, getTotalAmount, recalculateBaseTotalCart]
+  )
 
-  const filteredItems = useMemo(() => items.filter(item => item.qty > 0), [items]);
+  const filteredItems = useMemo(() => items.filter(item => item.qty > 0), [items])
 
   const calculateShippingCost = useMemo(() => {
     // ถ้าเลือก Grab ให้คืนค่า 0
-    if (method === 'grab') return 0;
+    if (method === 'grab') return 0
 
     // คำนวณค่าจัดส่งปกติ
-    if (!config || !config.shippingCost || localTotalAmount === 0) return 0;
-    const { standard, special } = config.shippingCost;
+    if (!config || !config.shippingCost || localTotalAmount === 0) return 0
+    const { standard, special } = config.shippingCost
 
     if (localTotalAmount <= standard.value) {
-      return standard.cost;
+      return standard.cost
     } else {
-      return Math.ceil(localTotalAmount / special.value);
+      return Math.ceil(localTotalAmount / special.value)
     }
-  }, [config, localTotalAmount, method]);
+  }, [config, localTotalAmount, method])
 
   const priceDisplay = useMemo(() => {
-    if (!config?.saleModel.listPrice) return [];
+    if (!config?.saleModel.listPrice) return []
 
     // เรียงลำดับราคาตาม minPurchase
-    return [...config.saleModel.listPrice].sort((a, b) => a.minPurchase - b.minPurchase);
-  }, [config]);
+    return [...config.saleModel.listPrice].sort((a, b) => a.minPurchase - b.minPurchase)
+  }, [config])
 
   const totalWithShipping = useMemo(() => {
-    return localTotalAmount + calculateShippingCost;
-  }, [localTotalAmount, calculateShippingCost]);
+    return localTotalAmount + calculateShippingCost
+  }, [localTotalAmount, calculateShippingCost])
 
-
-  const [netTotal, setNetTotal] = useState(totalWithShipping);
+  const [netTotal, setNetTotal] = useState(totalWithShipping)
 
   const isCartEmpty = useMemo(() => {
-    return localTotalAmount <= 0;
-  }, [localTotalAmount]);
+    return localTotalAmount <= 0
+  }, [localTotalAmount])
 
   const canCheckout = useMemo(() => {
-    if (!config) return false;
-    const { minOrderStatus, minOrderValue } = config.saleModel;
+    if (!config) return false
+    const { minOrderStatus, minOrderValue } = config.saleModel
 
-
-    return !minOrderStatus || localTotalAmount >= minOrderValue;
-  }, [config, localTotalAmount]);
+    return !minOrderStatus || localTotalAmount >= minOrderValue
+  }, [config, localTotalAmount])
 
   // 1. ปรับที่ร้านค้า - handleCreateOrders
   const handleCreateOrders = async () => {
-    const { user } = useClientStores.getState();
+    const { user } = useClientStores.getState()
 
     if (!user?.userId || !selectedAddress) {
       setSnackbar({
         open: true,
         message: !user?.userId ? 'กรุณาเข้าสู่ระบบก่อนทำรายการ' : 'กรุณาเลือกที่อยู่จัดส่ง',
         severity: 'error'
-      });
+      })
 
-      return;
+      return
     }
 
-    setIsProcess(true);
+    setIsProcess(true)
 
     try {
       // เช็ค stock ก่อน
@@ -236,7 +233,7 @@ const MultiPriceTotalCart: React.FC = () => {
           sku: item.sku,
           qty: item.qty
         }))
-      );
+      )
 
       if (!stockCheck.success) {
         setInsufficientStock(
@@ -244,11 +241,11 @@ const MultiPriceTotalCart: React.FC = () => {
             name: item.name,
             available: item.available
           })) || null
-        );
-        throw new Error(stockCheck.error || 'สินค้าในสต็อกไม่เพียงพอ');
+        )
+        throw new Error(stockCheck.error || 'สินค้าในสต็อกไม่เพียงพอ')
       }
 
-      setInsufficientStock(null);
+      setInsufficientStock(null)
 
       // สร้าง order data
       const orderData: Omit<TypeOrder, '_id' | 'createdAt' | 'updatedAt' | '__v'> = {
@@ -287,76 +284,73 @@ const MultiPriceTotalCart: React.FC = () => {
           slip: []
         },
         discountAmount: couponDiscount,
-        coupon: selectedCoupon ? {
-          code: selectedCoupon.code,
-          type: selectedCoupon.type,
-          value: selectedCoupon.value,
-          isPercent: selectedCoupon.isPercent,
-          discountAmount: couponDiscount
-        } : undefined
-      };
+        coupon: selectedCoupon
+          ? {
+              code: selectedCoupon.code,
+              type: selectedCoupon.type,
+              value: selectedCoupon.value,
+              isPercent: selectedCoupon.isPercent,
+              discountAmount: couponDiscount
+            }
+          : undefined
+      }
 
       // ส่งไปที่คลัง
-      const warehouseResponse = await sendOrderToWarehouse(orderData);
+      const warehouseResponse = await sendOrderToWarehouse(orderData)
 
       if (!warehouseResponse?.success) {
-        throw new Error(warehouseResponse?.error || 'Failed to process in warehouse');
+        throw new Error(warehouseResponse?.error || 'Failed to process in warehouse')
       }
 
       // สร้าง order ในร้านค้า
       await actionCreateOrder({
         ...orderData,
         warehouseOrderId: warehouseResponse.order._id
-      });
+      })
 
       setSnackbar({
         open: true,
         message: 'สร้างคำสั่งซื้อสำเร็จ',
         severity: 'success'
-      });
+      })
 
-      handleClose();
-      setPayment(warehouseResponse.order);
-      clearCart();
-
+      handleClose()
+      setPayment(warehouseResponse.order)
+      clearCart()
     } catch (error) {
-      console.error('Failed to create order:', error);
+      console.error('Failed to create order:', error)
       setSnackbar({
         open: true,
         message: error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสร้างคำสั่งซื้อ',
         severity: 'error'
-      });
+      })
     } finally {
-      setIsProcess(false);
+      setIsProcess(false)
     }
-  };
+  }
 
   const handleUpdatePayment = (updatedPayment: TypeOrder['payment']) => {
     setPayment(prevPayment => {
       if (prevPayment) {
-        return { ...prevPayment, payment: updatedPayment };
+        return { ...prevPayment, payment: updatedPayment }
       }
 
-
-      return prevPayment;
-    });
-  };
+      return prevPayment
+    })
+  }
 
   const handleCancelOrder = () => {
-    setPayment(undefined);
-  };
+    setPayment(undefined)
+  }
 
   const handleSnackbarClose = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
+    setSnackbar({ ...snackbar, open: false })
+  }
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>Error: {error}</div>
 
   const primaryColor = config?.displayConfig.primaryColor ? config?.displayConfig.primaryColor : '#000000'
-
-
-
 
   return (
     <>
@@ -369,7 +363,7 @@ const MultiPriceTotalCart: React.FC = () => {
           className={`flex gap-2`}
           style={{ background: primaryColor }}
         >
-          <i className="tabler-shopping-bag text-[32px]"></i>
+          <i className='tabler-shopping-bag text-[32px]'></i>
           <div className='block leading-none my-auto text-left'>
             <p>{formatNumber(localTotalAmount)} ฿</p>
             <p className='text-xs'>{getItemCount()} รายการ</p>
@@ -384,26 +378,22 @@ const MultiPriceTotalCart: React.FC = () => {
         aria-describedby='alert-dialog-description'
         onClose={(event, reason) => {
           if (reason !== 'backdropClick') {
-            handleClose();
+            handleClose()
           }
         }}
-        maxWidth="xs"
+        maxWidth='xs'
         fullWidth
       >
         <DialogTitle id='alert-dialog-title'>ยืนยันการสั่งซื้อ</DialogTitle>
         <DialogContent>
-          <DialogContentText id='alert-dialog-description'>
-            รายการสินค้าในตะกร้า:
-          </DialogContentText>
-          <div className="mt-4">
+          <DialogContentText id='alert-dialog-description'>รายการสินค้าในตะกร้า:</DialogContentText>
+          <div className='mt-4'>
             {filteredItems.map((item, index) => (
-              <div key={index} className="grid grid-cols-1 items-center mb-4 justify-between w-full">
-                <div className="grid items-center grid-cols-[100px_1fr] gap-2">
-                  {item.imagepath && (
-                    <img src={item.imagepath} alt={item.name} className="w-full max-w-[80px]" />
-                  )}
+              <div key={index} className='grid grid-cols-1 items-center mb-4 justify-between w-full'>
+                <div className='grid items-center grid-cols-[100px_1fr] gap-2'>
+                  {item.imagepath && <img src={item.imagepath} alt={item.name} className='w-full max-w-[80px]' />}
                   <div className='leading-none'>
-                    <p className="font-semibold text-sm">{item.name}</p>
+                    <p className='font-semibold text-sm'>{item.name}</p>
                     <p className='text-xs'>
                       {priceDisplay.map((price, index) => (
                         <React.Fragment key={price.id}>
@@ -411,28 +401,44 @@ const MultiPriceTotalCart: React.FC = () => {
                           {index < priceDisplay.length - 1 && ' | '}
                         </React.Fragment>
                       ))}
-
                     </p>
-                    <p className='text-xs'> {'คงเหลือ:'}{item.availablestock}</p>
+                    <p className='text-xs'>
+                      {' '}
+                      {'คงเหลือ:'}
+                      {item.availablestock}
+                    </p>
                     <div className='grid items-center grid-cols-[100px_1fr] gap-2'>
                       <div className='flex justify-between mt-2'>
-                        <p onClick={() => handleQuantityChange(item.sku, item.qty - 1)} className='flex p-0 my-auto cursor-pointer'> <i className="tabler-minus"></i></p>
+                        <p
+                          onClick={() => handleQuantityChange(item.sku, item.qty - 1)}
+                          className='flex p-0 my-auto cursor-pointer'
+                        >
+                          {' '}
+                          <i className='tabler-minus'></i>
+                        </p>
                         <TextField
                           value={item.qty}
-                          onChange={(e) => handleQuantityChange(item.sku, parseInt(e.target.value) || 0)}
-                          type="number"
-                          onFocus={(event) => event.currentTarget.select()}
+                          onChange={e => handleQuantityChange(item.sku, parseInt(e.target.value) || 0)}
+                          type='number'
+                          onFocus={event => event.currentTarget.select()}
                           inputProps={{
                             min: 0,
                             max: item.availablestock,
                             className: 'p-0 text-center h-full p-1 w-[50px]'
                           }}
-                          size="small"
+                          size='small'
                         />
-                        <p onClick={() => handleQuantityChange(item.sku, item.qty + 1)} className='flex p-0 my-auto cursor-pointer'> <i className="tabler-plus"></i></p>
+                        <p
+                          onClick={() => handleQuantityChange(item.sku, item.qty + 1)}
+                          className='flex p-0 my-auto cursor-pointer'
+                        >
+                          {' '}
+                          <i className='tabler-plus'></i>
+                        </p>
                       </div>
-                      <p className="mt-4 text-xs text-right">
-                        รวม: {formatNumber((item.prices[applicablePriceId] || Object.values(item.prices)[0]) * item.qty)}
+                      <p className='mt-4 text-xs text-right'>
+                        รวม:{' '}
+                        {formatNumber((item.prices[applicablePriceId] || Object.values(item.prices)[0]) * item.qty)}
                       </p>
                     </div>
                   </div>
@@ -442,18 +448,16 @@ const MultiPriceTotalCart: React.FC = () => {
           </div>
 
           {deliveryStatus?.enableGrabDelivery && (
-            <ShippingMethodSelector
-              enableGrabDelivery={deliveryStatus.enableGrabDelivery}
-            />
+            <ShippingMethodSelector enableGrabDelivery={deliveryStatus.enableGrabDelivery} />
           )}
           <ShippingInfo />
 
           <CouponSection
             totalAmount={localTotalAmount}
             onApplyCoupon={(discount, coupon) => {
-              setCouponDiscount(discount);
-              setSelectedCoupon(coupon);
-              setNetTotal(totalWithShipping - discount);
+              setCouponDiscount(discount)
+              setSelectedCoupon(coupon)
+              setNetTotal(totalWithShipping - discount)
             }}
           />
 
@@ -483,10 +487,10 @@ const MultiPriceTotalCart: React.FC = () => {
           </div>
 
           {insufficientStock && insufficientStock.length > 0 && (
-            <Alert severity="error" className="mt-2">
-              <div className="font-semibold">สินค้าคงเหลือไม่เพียงพอ:</div>
+            <Alert severity='error' className='mt-2'>
+              <div className='font-semibold'>สินค้าคงเหลือไม่เพียงพอ:</div>
               {insufficientStock.map((item, index) => (
-                <div key={index} className="text-sm">
+                <div key={index} className='text-sm'>
                   {item.name}
                 </div>
               ))}
@@ -494,14 +498,14 @@ const MultiPriceTotalCart: React.FC = () => {
           )}
 
           {config?.saleModel.minOrderStatus && localTotalAmount < config.saleModel.minOrderValue && (
-            <p className="text-red-500 mt-2 text-center underline">
+            <p className='text-red-500 mt-2 text-center underline'>
               ยอดสั่งซื้อขั้นต่ำ {formatNumber(config.saleModel.minOrderValue)} บาท
             </p>
           )}
         </DialogContent>
         <DialogActions className='dialog-actions-dense pt-3'>
           <Button onClick={handleClose} variant='outlined' color='error' disabled={isProcess}>
-            เลือกสินค้าเพิ่ม
+            เลือกซื้อสินค้าเพิ่ม
           </Button>
 
           <Button
@@ -523,7 +527,6 @@ const MultiPriceTotalCart: React.FC = () => {
           onClose={handleCancelOrder}
           onOpen={true}
           onUpdatePayment={handleUpdatePayment}
-
         />
       )}
 
@@ -546,7 +549,7 @@ const MultiPriceTotalCart: React.FC = () => {
         </Alert>
       </Snackbar>
     </>
-  );
-};
+  )
+}
 
-export default MultiPriceTotalCart;
+export default MultiPriceTotalCart
