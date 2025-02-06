@@ -6,6 +6,7 @@ export type TypePriceList = {
   priceId: string;
   priceName: string;
   status: boolean;
+  LIFF_ID?: string;
   createdAt: Date;
   updatedAt: Date;
 }

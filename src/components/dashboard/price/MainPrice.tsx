@@ -14,6 +14,9 @@ import type { TypePriceList } from "@/types/priceListTypes";
 import BtnDeletePrice from '@/components/dashboard/price/btnDeletePrice';
 import BtnEdit from '@/components/dashboard/price/btnEdit';
 import { usePriceLists, usePriceListSearch } from '@/actions/backend/priceList/usePriceList';
+import CopyButtons from './CopyButtons';
+
+
 
 const columns: Column<TypePriceList>[] = [
 
@@ -32,6 +35,9 @@ const rowsPerPageOptions = [20, 100];
 
 
 const MainPrice = () => {
+
+
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[0]);
   const [orderBy, setOrderBy] = useState<keyof TypePriceList>('_id');
@@ -84,12 +90,13 @@ const MainPrice = () => {
   };
 
   const renderActions = (row: TypePriceList) => (
-    <>
+    <div className='flex gap-2'>
+      <CopyButtons items={row} />
       <BtnEdit items={row} />
       <BtnDeletePrice items={row} />
 
 
-    </>
+    </div>
   );
 
   const isLoading = isSearching ? isLoadingSearch : isLoadingAll;
