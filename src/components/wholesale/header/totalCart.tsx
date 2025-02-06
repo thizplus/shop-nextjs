@@ -162,14 +162,6 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
     return totalCartSum <= 0
   }, [totalCartSum])
 
-  const canCheckout = useMemo(() => {
-    if (!config) return false
-    const { minOrderStatus, minOrderValue } = config.saleModel
-
-    return !minOrderStatus || getTotalAmount(priceId) >= minOrderValue
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, priceId, getTotalAmount, cartVersion])
-
   const handleCreateOrders = async () => {
     const { user } = useClientStores.getState()
 
@@ -450,12 +442,6 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
               ))}
             </Alert>
           )}
-
-          {config?.saleModel.minOrderStatus && getTotalAmount(priceId) < config.saleModel.minOrderValue && (
-            <p className='text-red-500 mt-2 text-center underline'>
-              ยอดสั่งซื้อขั้นต่ำ {formatNumber(config.saleModel.minOrderValue)} บาท
-            </p>
-          )}
         </DialogContent>
         <DialogActions className='dialog-actions-dense pt-3'>
           <Button onClick={handleClose} variant='outlined' color='error' disabled={isProcess}>
@@ -467,7 +453,7 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
             autoFocus
             variant='contained'
             color='success'
-            disabled={!canCheckout || isProcess || isCartEmpty}
+            disabled={isProcess || isCartEmpty} // ลบ !canCheckout ออก
           >
             {isProcess ? 'กำลังดำเนินการ...' : 'ยืนยันคำสั่งซื้อ'}
           </Button>
