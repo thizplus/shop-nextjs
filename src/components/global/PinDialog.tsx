@@ -30,7 +30,7 @@ const PinDialog: React.FC<PinDialogProps> = ({
       PaperProps={{
         style: {
           margin: 0,
-          maxWidth: '100%',
+          maxWidth: 430,
           width: '100%'
         }
       }}
@@ -38,7 +38,7 @@ const PinDialog: React.FC<PinDialogProps> = ({
 
       <DialogContent>
         <div className="h-full flex">
-          <div className="p-4 leading-none text-center my-auto">
+          <div className="p-4 leading-none text-center m-auto">
             <p className="text-xl font-bold">     {hasPin ? 'กรุณายืนยัน PIN' : 'กรุณาตั้งค่า PIN'}</p>
             <p className="mb-4 text-center">
               {hasPin ? 'กรุณาใส่รหัสให้ถูกต้อง' : 'ตั้งรหัสผ่านของคุณ 6 หลัก'}
