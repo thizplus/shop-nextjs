@@ -445,7 +445,7 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
         </DialogContent>
         <DialogActions className='dialog-actions-dense pt-3'>
           <Button onClick={handleClose} variant='outlined' color='error' disabled={isProcess}>
-            เลือกซื้อสินค้าเพิ่ม
+            เลือกซื้อสินค้าเพิ่มเติม
           </Button>
 
           <Button
