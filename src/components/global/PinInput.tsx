@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Alert, Button, TextField, IconButton } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
-import { useConfigStore } from "@/stores/configStore";
 
 interface PinInputProps {
   onSubmit: (pin: string) => Promise<void>;
@@ -14,7 +13,7 @@ interface PinInputProps {
 const PinInput: React.FC<PinInputProps> = ({ onSubmit, isVerifying, error }) => {
 
 
-  const { config } = useConfigStore();
+
   const [pin, setPin] = useState<string>("");
   const [showPin, setShowPin] = useState(false);
 
@@ -59,7 +58,7 @@ const PinInput: React.FC<PinInputProps> = ({ onSubmit, isVerifying, error }) => 
             // เพิ่ม style สำหรับ focus state
             '& .MuiOutlinedInput-root': {
               '&.Mui-focused fieldset': {
-                borderColor: config?.displayConfig.primaryColor || '#000000', // สีขอบตอน focus
+                borderColor: '#000000', // สีขอบตอน focus
                 borderWidth: '2px'
               },
             },
@@ -84,7 +83,7 @@ const PinInput: React.FC<PinInputProps> = ({ onSubmit, isVerifying, error }) => 
       <Button
         type="submit"
         variant="contained"
-        style={{ background: config?.displayConfig.primaryColor || '#000000' }}
+        style={{ background: '#000000' }}
         disabled={isVerifying || pin.length !== 6}
         fullWidth
       >
