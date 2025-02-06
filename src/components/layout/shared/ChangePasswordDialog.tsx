@@ -1,5 +1,5 @@
 // components/dialogs/ChangePasswordDialog.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -33,13 +33,18 @@ const ChangePasswordDialog = ({ open, onClose }: ChangePasswordDialogProps) => {
 
   const { changePassword, loading } = useChangePassword();
 
-  const username = localStorage.getItem('username');
+  const [userName, setUserName] = useState<string | null>(null)
+
+  useEffect(() => {
+    setUserName(localStorage.getItem('username'))
+
+  }, [])
 
   const handleSubmit = async () => {
     try {
       setError('');
 
-      if (!username) {
+      if (!userName) {
         setError('ไม่พบข้อมูลผู้ใช้');
 
         return;
@@ -59,7 +64,7 @@ const ChangePasswordDialog = ({ open, onClose }: ChangePasswordDialogProps) => {
 
       await changePassword({
         ...formData,
-        username
+        userName
       });
       onClose();
 

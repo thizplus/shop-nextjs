@@ -5,7 +5,7 @@ interface ChangePasswordData {
   oldPassword: string;
   newPassword: string;
   confirmPassword: string;
-  username: string;
+  userName: string | null | undefined;
 }
 
 export const useChangePassword = () => {
