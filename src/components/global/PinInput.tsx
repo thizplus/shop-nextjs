@@ -1,7 +1,9 @@
-import { useRef, useState } from "react";
-import type { ChangeEvent, KeyboardEvent } from "react";
+import { useState } from "react";
 
-import { Alert, Button } from "@mui/material";
+import { Alert, Button, TextField, IconButton } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+
+import { useConfigStore } from "@/stores/configStore";
 
 interface PinInputProps {
   onSubmit: (pin: string) => Promise<void>;
@@ -10,80 +12,85 @@ interface PinInputProps {
 }
 
 const PinInput: React.FC<PinInputProps> = ({ onSubmit, isVerifying, error }) => {
-  const [inputValues, setInputValues] = useState<string[]>(Array(6).fill(""));
-  const inputRefs = useRef<HTMLInputElement[]>([]);
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>, index: number) => {
-    const { value } = event.target;
-    const newValue = value.replace(/\D/g, '').slice(0, 1);
-    const newInputValues = [...inputValues];
 
-    newInputValues[index] = newValue;
-    setInputValues(newInputValues);
+  const { config } = useConfigStore();
+  const [pin, setPin] = useState<string>("");
+  const [showPin, setShowPin] = useState(false);
 
-    if (newValue !== "" && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
+  const handlePinChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value.replace(/\D/g, "").slice(0, 6);
+
+    setPin(value);
   };
 
-  const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (event.key === 'Backspace') {
-      if (inputValues[index] === '' && index > 0) {
-        const newInputValues = [...inputValues];
-
-        newInputValues[index - 1] = '';
-        setInputValues(newInputValues);
-        inputRefs.current[index - 1]?.focus();
-      } else {
-        const newInputValues = [...inputValues];
-
-        newInputValues[index] = '';
-        setInputValues(newInputValues);
-      }
-    }
-  };
-
-  const handlePinSubmit = async () => {
-    const pin = inputValues.join("");
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (pin.length === 6) {
       await onSubmit(pin);
     }
   };
 
-  const setInputRef = (el: HTMLInputElement | null, index: number) => {
-    if (el) {
-      inputRefs.current[index] = el;
-    }
-  };
-
   return (
-    <div className="p-4">
-      <div className="grid grid-cols-6 gap-2">
-        {inputValues.map((value, index) => (
-          <input
-            key={index}
-            ref={(el) => setInputRef(el, index)}
-            type="text"
-            maxLength={1}
-            value={value}
-            onChange={(e) => handleInputChange(e, index)}
-            onKeyDown={(e) => handleInputKeyDown(e, index)}
-            className="w-full text-center border rounded p-2"
-          />
-        ))}
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="relative">
+        <TextField
+          type={showPin ? "text" : "password"}
+          value={pin}
+          onChange={handlePinChange}
+          placeholder="PIN 6 หลัก"
+          inputProps={{
+            maxLength: 6,
+            pattern: "[0-9]*",
+            inputMode: "numeric",
+            autoComplete: "new-password"
+          }}
+          error={!!error}
+          disabled={isVerifying}
+          fullWidth
+          sx={{
+            '& input': {
+              fontSize: '24px',
+              letterSpacing: '0.5em',
+              textAlign: 'center'
+            },
+
+            // เพิ่ม style สำหรับ focus state
+            '& .MuiOutlinedInput-root': {
+              '&.Mui-focused fieldset': {
+                borderColor: config?.displayConfig.primaryColor || '#000000', // สีขอบตอน focus
+                borderWidth: '2px'
+              },
+            },
+
+            // ถ้าต้องการเปลี่ยนสีพื้นหลังตอน focus ด้วย
+            '& .MuiInputBase-input:focus': {
+              backgroundColor: '#f8f8f8' // หรือสีที่ต้องการ
+            }
+          }}
+        />
+        <IconButton
+          onClick={() => setShowPin(!showPin)}
+          className="absolute right-2 top-1/2 -translate-y-1/2"
+          size="large"
+        >
+          {showPin ? <VisibilityOff /> : <Visibility />}
+        </IconButton>
       </div>
-      {error && <Alert severity="error" className="mt-4">{error}</Alert>}
+
+      {error && <Alert severity="error">{error}</Alert>}
+
       <Button
-        onClick={handlePinSubmit}
-        disabled={isVerifying || inputValues.join("").length !== 6}
+        type="submit"
         variant="contained"
+        style={{ background: config?.displayConfig.primaryColor || '#000000' }}
+        disabled={isVerifying || pin.length !== 6}
         fullWidth
-        className="mt-4"
       >
         ยืนยัน PIN
       </Button>
-    </div>
+    </form>
   );
 };
 

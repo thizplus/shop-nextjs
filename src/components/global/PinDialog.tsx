@@ -1,6 +1,5 @@
-
-
-import { Dialog, DialogContent, DialogTitle } from "@mui/material";
+// PinDialog.tsx
+import { Dialog, DialogContent } from "@mui/material";
 
 import PinInput from "./PinInput";
 import type { TypeClient } from "@/types/clientTypes";
@@ -36,19 +35,24 @@ const PinDialog: React.FC<PinDialogProps> = ({
         }
       }}
     >
-      <DialogTitle>
-        {hasPin ? 'กรุณายืนยัน PIN' : 'กรุณาตั้งค่า PIN'}
-      </DialogTitle>
+
       <DialogContent>
-        {hasPin ? 'กรุณาใส่รหัสให้ถูกต้อง' : 'ตั้งรหัสผ่านของคุณ 6 หลัก'}
-        <PinInput
-          onSubmit={onPinSubmit}
-          isVerifying={isVerifying}
-          error={error}
-        />
+        <div className="h-full flex">
+          <div className="p-4 leading-none text-center my-auto">
+            <p className="text-xl font-bold">     {hasPin ? 'กรุณายืนยัน PIN' : 'กรุณาตั้งค่า PIN'}</p>
+            <p className="mb-4 text-center">
+              {hasPin ? 'กรุณาใส่รหัสให้ถูกต้อง' : 'ตั้งรหัสผ่านของคุณ 6 หลัก'}
+            </p>
+            <PinInput
+              onSubmit={onPinSubmit}
+              isVerifying={isVerifying}
+              error={error}
+            />
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default PinDialog
+export default PinDialog;
