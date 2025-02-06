@@ -162,11 +162,6 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
     return totalCartSum <= 0
   }, [totalCartSum])
 
-  const canCheckout = useMemo(() => {
-    // ลบการเช็ค minOrderStatus และ minOrderValue ออก
-    return true // อนุญาตให้ checkout ได้เสมอ
-  }, [])
-
   const handleCreateOrders = async () => {
     const { user } = useClientStores.getState()
 
