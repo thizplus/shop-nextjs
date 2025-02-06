@@ -15,6 +15,7 @@ import BtnDeletePrice from '@/components/dashboard/price/btnDeletePrice';
 import BtnEdit from '@/components/dashboard/price/btnEdit';
 import { usePriceLists, usePriceListSearch } from '@/actions/backend/priceList/usePriceList';
 import CopyButtons from './CopyButtons';
+import BtnEditName from './btnEditName';
 
 
 
@@ -92,6 +93,7 @@ const MainPrice = () => {
   const renderActions = (row: TypePriceList) => (
     <div className='flex gap-2'>
       <CopyButtons items={row} />
+      <BtnEditName items={row} />
       <BtnEdit items={row} />
       <BtnDeletePrice items={row} />
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import EditIcon from '@mui/icons-material/Edit';
+import EditNoteIcon from '@mui/icons-material/EditNote';
 import IconButton from "@mui/material/IconButton";
 
 import type { TypePriceList } from "@/types/priceListTypes";
@@ -13,8 +13,8 @@ const BtnEdit = ({ items }: propsLink) => {
   return (
 
     <IconButton aria-label="edit" >
-      <Link className="flex" href={`/dashboard/price/${items._id}`}>
-        <EditIcon />
+      <Link className="flex" href={`/dashboard/price/${items.priceId}`}>
+        <EditNoteIcon className="text-[30px]" />
       </Link>
     </IconButton>
 
