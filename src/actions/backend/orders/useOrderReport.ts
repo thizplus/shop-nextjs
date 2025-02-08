@@ -12,6 +12,18 @@ interface OrderDetail {
   payment: {
     amount: number;
   };
+
+  // เพิ่มส่วนข้อมูลกำไร/ขาดทุน
+  profitInfo?: {
+    totalCost: number;    // ต้นทุนรวม
+    grossProfit: number;  // กำไรขั้นต้น
+    netProfit: number;    // กำไรสุทธิ
+  };
+  warehouseFees?: {
+    shippingCost: number;
+    serviceFee: number;
+    totalFees: number;
+  };
 }
 
 interface Summary {
@@ -20,6 +32,12 @@ interface Summary {
   totalAmount: number;
   totalNetAmount: number;
   totalPaymentAmount: number;
+
+  // เพิ่มส่วนสรุปกำไร/ขาดทุน
+  totalCost: number;         // ต้นทุนรวม
+  totalGrossProfit: number;  // กำไรขั้นต้นรวม
+  totalNetProfit: number;    // กำไรสุทธิรวม
+  totalWarehouseFees: number; // ค่าใช้จ่ายคลังรวม
 }
 
 interface DailyReport {

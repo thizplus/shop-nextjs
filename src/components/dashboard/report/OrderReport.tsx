@@ -75,7 +75,8 @@ const OrderReport = () => {
                     สรุปรวมทั้งหมด
                   </Typography>
                   <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6} md={3}>
+                    {/* Cards ข้อมูลการขายเดิม */}
+                    <Grid item xs={12} sm={6} md={2}>
                       <Card variant="outlined" sx={{ p: 2 }}>
                         <Typography variant="subtitle2" color="textSecondary">จำนวนออเดอร์</Typography>
                         <Typography variant="h4">{data.summary.totalOrders}</Typography>
@@ -84,30 +85,46 @@ const OrderReport = () => {
                     </Grid>
                     <Grid item xs={12} sm={6} md={2}>
                       <Card variant="outlined" sx={{ p: 2 }}>
-                        <Typography variant="subtitle2" color="textSecondary">ค่าจัดส่งรวม</Typography>
-                        <Typography variant="h4">{formatNumber(data.summary.totalShippingCost)}</Typography>
-                        <Typography variant="caption" color="textSecondary">บาท</Typography>
-                      </Card>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                      <Card variant="outlined" sx={{ p: 2 }}>
-                        <Typography variant="subtitle2" color="textSecondary">ยอดสินค้ารวม</Typography>
+                        <Typography variant="subtitle2" color="textSecondary">ยอดขายรวม</Typography>
                         <Typography variant="h4">{formatNumber(data.summary.totalAmount)}</Typography>
                         <Typography variant="caption" color="textSecondary">บาท</Typography>
                       </Card>
                     </Grid>
+                    {/* Cards ข้อมูลกำไร/ขาดทุน */}
                     <Grid item xs={12} sm={6} md={2}>
-                      <Card variant="outlined" sx={{ p: 2 }}>
-                        <Typography variant="subtitle2" color="textSecondary">ยอดรวมสุทธิ</Typography>
-                        <Typography variant="h4" color="primary">{formatNumber(data.summary.totalNetAmount)}</Typography>
-                        <Typography variant="caption" color="textSecondary">บาท</Typography>
+                      <Card variant="outlined" sx={{ p: 2, bgcolor: 'error.light' }}>
+                        <Typography variant="subtitle2" color="error">ต้นทุนรวม</Typography>
+                        <Typography variant="h4" color="error">
+                          {formatNumber(data.summary.totalCost)}
+                        </Typography>
+                        <Typography variant="caption" color="error">บาท</Typography>
                       </Card>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Card variant="outlined" sx={{ p: 2 }}>
-                        <Typography variant="subtitle2" color="textSecondary">ยอดโอนจริง</Typography>
-                        <Typography variant="h4" color="success.dark">{formatNumber(data.summary.totalPaymentAmount)}</Typography>
-                        <Typography variant="caption" color="textSecondary">บาท</Typography>
+                    <Grid item xs={12} sm={6} md={2}>
+                      <Card variant="outlined" sx={{ p: 2, bgcolor: 'warning.light' }}>
+                        <Typography variant="subtitle2" color="warning.dark">ค่าใช้จ่ายคลัง</Typography>
+                        <Typography variant="h4" color="warning.dark">
+                          {formatNumber(data.summary.totalWarehouseFees)}
+                        </Typography>
+                        <Typography variant="caption" color="warning.dark">บาท</Typography>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                      <Card variant="outlined" sx={{ p: 2, bgcolor: 'success.light' }}>
+                        <Typography variant="subtitle2" color="success.dark">กำไรขั้นต้น</Typography>
+                        <Typography variant="h4" color="success.dark">
+                          {formatNumber(data.summary.totalGrossProfit)}
+                        </Typography>
+                        <Typography variant="caption" color="success.dark">บาท</Typography>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                      <Card variant="outlined" sx={{ p: 2, bgcolor: 'primary.light' }}>
+                        <Typography variant="subtitle2" color="primary.dark">กำไรสุทธิ</Typography>
+                        <Typography variant="h4" color="primary.dark">
+                          {formatNumber(data.summary.totalNetProfit)}
+                        </Typography>
+                        <Typography variant="caption" color="primary.dark">บาท</Typography>
                       </Card>
                     </Grid>
                   </Grid>
@@ -138,8 +155,8 @@ const OrderReport = () => {
                         </Typography>
                       </Grid>
                       <Grid item xs={6} md={4}>
-                        <Typography color="primary">
-                          ยอดขาย: {formatNumber(daily.summary.totalNetAmount)} บาท
+                        <Typography color="success.main">
+                          กำไรสุทธิ: {formatNumber(daily.summary.totalNetProfit)} บาท
                         </Typography>
                       </Grid>
                     </Grid>
@@ -152,10 +169,11 @@ const OrderReport = () => {
                             <TableCell>วันที่สั่งซื้อ</TableCell>
                             <TableCell>เลขที่คำสั่งซื้อ</TableCell>
                             <TableCell>ลูกค้า</TableCell>
-                            <TableCell align="right">ค่าส่ง</TableCell>
-                            <TableCell align="right">ยอดสินค้า</TableCell>
-                            <TableCell align="right">ยอดรวม</TableCell>
-                            <TableCell align="right">ยอดโอนจริง</TableCell>
+                            <TableCell align="right">ยอดขาย</TableCell>
+                            <TableCell align="right" sx={{ color: 'error.main' }}>ต้นทุน</TableCell>
+                            <TableCell align="right" sx={{ color: 'warning.dark' }}>ค่าคลัง</TableCell>
+                            <TableCell align="right" sx={{ color: 'success.main' }}>กำไรขั้นต้น</TableCell>
+                            <TableCell align="right" sx={{ color: 'primary.main' }}>กำไรสุทธิ</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -164,10 +182,19 @@ const OrderReport = () => {
                               <TableCell>{order.createdAt}</TableCell>
                               <TableCell>{order.orderId}</TableCell>
                               <TableCell>{order.customerName}</TableCell>
-                              <TableCell align="right">{formatNumber(order.shippingCost)}</TableCell>
                               <TableCell align="right">{formatNumber(order.totalAmount)}</TableCell>
-                              <TableCell align="right">{formatNumber(order.netTotal)}</TableCell>
-                              <TableCell align="right">{formatNumber(order.payment.amount)}</TableCell>
+                              <TableCell align="right" sx={{ color: 'error.main' }}>
+                                {formatNumber(order.profitInfo?.totalCost || 0)}
+                              </TableCell>
+                              <TableCell align="right" sx={{ color: 'warning.dark' }}>
+                                {formatNumber(order.warehouseFees?.totalFees || 0)}
+                              </TableCell>
+                              <TableCell align="right" sx={{ color: 'success.main' }}>
+                                {formatNumber(order.profitInfo?.grossProfit || 0)}
+                              </TableCell>
+                              <TableCell align="right" sx={{ color: 'primary.main' }}>
+                                {formatNumber(order.profitInfo?.netProfit || 0)}
+                              </TableCell>
                             </TableRow>
                           ))}
                           <TableRow
@@ -179,10 +206,19 @@ const OrderReport = () => {
                             }}
                           >
                             <TableCell colSpan={3}>รวมประจำวัน</TableCell>
-                            <TableCell align="right">{formatNumber(daily.summary.totalShippingCost)}</TableCell>
                             <TableCell align="right">{formatNumber(daily.summary.totalAmount)}</TableCell>
-                            <TableCell align="right">{formatNumber(daily.summary.totalNetAmount)}</TableCell>
-                            <TableCell align="right">{formatNumber(daily.summary.totalPaymentAmount)}</TableCell>
+                            <TableCell align="right" sx={{ color: 'error.main' }}>
+                              {formatNumber(daily.summary.totalCost)}
+                            </TableCell>
+                            <TableCell align="right" sx={{ color: 'warning.dark' }}>
+                              {formatNumber(daily.summary.totalWarehouseFees)}
+                            </TableCell>
+                            <TableCell align="right" sx={{ color: 'success.main' }}>
+                              {formatNumber(daily.summary.totalGrossProfit)}
+                            </TableCell>
+                            <TableCell align="right" sx={{ color: 'primary.main' }}>
+                              {formatNumber(daily.summary.totalNetProfit)}
+                            </TableCell>
                           </TableRow>
                         </TableBody>
                       </Table>
