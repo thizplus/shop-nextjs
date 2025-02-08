@@ -286,12 +286,12 @@ const MultiPriceTotalCart: React.FC = () => {
         discountAmount: couponDiscount,
         coupon: selectedCoupon
           ? {
-              code: selectedCoupon.code,
-              type: selectedCoupon.type,
-              value: selectedCoupon.value,
-              isPercent: selectedCoupon.isPercent,
-              discountAmount: couponDiscount
-            }
+            code: selectedCoupon.code,
+            type: selectedCoupon.type,
+            value: selectedCoupon.value,
+            isPercent: selectedCoupon.isPercent,
+            discountAmount: couponDiscount
+          }
           : undefined
       }
 
@@ -347,13 +347,9 @@ const MultiPriceTotalCart: React.FC = () => {
     setSnackbar({ ...snackbar, open: false })
   }
 
-<<<<<<< HEAD
   if (loading) return <div>กำลังโหลดข้อมูล...</div>;
   if (error) return <div>Error: {error}</div>;
-=======
-  if (loading) return <div>Loading...</div>
-  if (error) return <div>Error: {error}</div>
->>>>>>> 815d8992319f4d172cde9292b1e1c4aceb1ab0b9
+
 
   const primaryColor = config?.displayConfig.primaryColor ? config?.displayConfig.primaryColor : '#000000'
 

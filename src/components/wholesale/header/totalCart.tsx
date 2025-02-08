@@ -237,21 +237,14 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
         discountAmount: couponDiscount,
         coupon: selectedCoupon
           ? {
-<<<<<<< HEAD
+
             code: selectedCoupon.code,
             type: selectedCoupon.type,
             value: selectedCoupon.value,
             isPercent: selectedCoupon.isPercent,
             discountAmount: couponDiscount
           }
-=======
-              code: selectedCoupon.code,
-              type: selectedCoupon.type,
-              value: selectedCoupon.value,
-              isPercent: selectedCoupon.isPercent,
-              discountAmount: couponDiscount
-            }
->>>>>>> 815d8992319f4d172cde9292b1e1c4aceb1ab0b9
+
           : undefined
       }
 
@@ -311,11 +304,9 @@ const TotalCart: React.FC<PropsTotalCart> = ({ priceId }) => {
     setSnackbar({ ...snackbar, open: false })
   }
 
-<<<<<<< HEAD
+
   if (loading) return <div>กำลังโหลดข้อมูล...</div>
-=======
-  if (loading) return <div>Loading...</div>
->>>>>>> 815d8992319f4d172cde9292b1e1c4aceb1ab0b9
+
   if (error) return <div>Error: {error}</div>
 
   const primaryColor = config?.displayConfig.primaryColor ? config?.displayConfig.primaryColor : '#000000'
