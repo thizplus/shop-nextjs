@@ -13,41 +13,73 @@ export const useAuth = () => {
   const { user, setUser, setLoggedIn, checkAuthStatus } = useClientStores();
   const tokenVerified = useRef(false);
 
-  const handleAuthStatus = useCallback(async (token: string, profile: TypeClient) => {
-    console.log('handleAuthStatus called', { token: token.substring(0, 10) + '...', profile });
+  // Define handleLogout first
+  const handleLogout = useCallback(() => {
+    console.log('handleLogout called');
+    localStorage.removeItem('lineLoginToken');
+    setLoggedIn(false);
+    setUser(null);
+    tokenVerified.current = false;
+  }, [setLoggedIn, setUser]);
 
-    if (tokenVerified.current) {
-      console.log('Token already verified, skipping');
-
-      return;
-    }
-
+  // Auto login function
+  const attemptAutoLogin = useCallback(async () => {
     try {
+      console.log('Attempting auto login...');
+      const loginUrl = `${API_BASE_URL}/api/line/login?redirectUrl=${encodeURIComponent(window.location.href)}&autoLogin=true`;
+      const response = await fetch(loginUrl);
+      const data = await response.json();
+
+      if (data.loginUrl) {
+        window.location.href = data.loginUrl;
+      }
+    } catch (error) {
+      console.error('Auto login error:', error);
+    }
+  }, []);
+
+  // Auth status handler
+  const handleAuthStatus = useCallback(async (token: string, profile: TypeClient) => {
+    try {
+      console.log('Checking auth status...');
+
+      const statusResponse = await fetch(`${API_BASE_URL}/api/line/check-token`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (statusResponse.status === 401) {
+        console.log('Token expired, initiating auto login');
+        handleLogout();
+        await attemptAutoLogin();
+
+        return;
+      }
+
       const updatedProfile = await checkAuthStatus(token, profile);
 
-      console.log('Updated profile', updatedProfile);
       setUser(updatedProfile);
       setLoggedIn(true);
       tokenVerified.current = true;
       console.log('Auth status updated successfully');
     } catch (error) {
-      console.error('Error updating auth status:', error);
-      setLoggedIn(false);
-      setUser(null);
+      console.error('Auth status error:', error);
+      handleLogout();
+      await attemptAutoLogin();
     }
-  }, [checkAuthStatus, setUser, setLoggedIn]);
+  }, [checkAuthStatus, setUser, setLoggedIn, handleLogout, attemptAutoLogin]);
 
+  // Token verification
   const verifyToken = useCallback(async (token: string) => {
-    console.log('verifyToken called', { token: token.substring(0, 10) + '...' });
-
-    if (tokenVerified.current) {
-      console.log('Token already verified, skipping');
+    if (!token) {
+      await attemptAutoLogin();
 
       return;
     }
 
     try {
-      console.log('Sending verify-token request to:', `${API_BASE_URL}/api/line/verify-token`);
+      console.log('Verifying token...');
 
       const response = await fetch(`${API_BASE_URL}/api/line/verify-token`, {
         method: 'POST',
@@ -58,140 +90,85 @@ export const useAuth = () => {
         body: JSON.stringify({ token })
       });
 
-      const data = await response.json();
-
-      console.log('Verify token response:', data);
-
-      if (data.valid) {
-        console.log('Token is valid, updating auth status');
-        await handleAuthStatus(token, data.profile as TypeClient);
-        tokenVerified.current = true;
-      } else {
-        console.log('Token is invalid, logging out');
-        setLoggedIn(false);
-        setUser(null);
-        localStorage.removeItem('lineLoginToken');
-      }
-    } catch (error) {
-      console.error('Token verification error:', error);
-      setLoggedIn(false);
-      setUser(null);
-      localStorage.removeItem('lineLoginToken');
-    }
-  }, [handleAuthStatus, setLoggedIn, setUser]);
-
-  useEffect(() => {
-    const initialize = async () => {
-      console.log('Initializing auth');
-
-      if (isInitialized) {
-        console.log('Already initialized, skipping');
+      if (response.status === 401) {
+        console.log('Token invalid, initiating auto login');
+        handleLogout();
+        await attemptAutoLogin();
 
         return;
       }
 
+      const data = await response.json();
+
+      if (data.valid) {
+        await handleAuthStatus(token, data.profile as TypeClient);
+      } else {
+        handleLogout();
+        await attemptAutoLogin();
+      }
+    } catch (error) {
+      console.error('Token verification error:', error);
+      handleLogout();
+      await attemptAutoLogin();
+    }
+  }, [handleAuthStatus, handleLogout, attemptAutoLogin]);
+
+  // Token check interval
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = localStorage.getItem('lineLoginToken');
+
+      if (!token) {
+        await attemptAutoLogin();
+
+        return;
+      }
+
+      await verifyToken(token);
+    };
+
+    const interval = setInterval(checkToken, 5 * 60 * 1000);
+
+
+    return () => clearInterval(interval);
+  }, [verifyToken, attemptAutoLogin]);
+
+  // Initialization
+  useEffect(() => {
+    const initialize = async () => {
+      if (isInitialized) return;
+
       try {
         await fetchConfig();
         const token = localStorage.getItem('lineLoginToken');
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
 
-        console.log('Token from localStorage:', token ? token.substring(0, 10) + '...' : 'null');
-
-        if (token) {
-          console.log('Token found in localStorage, verifying');
+        if (tokenFromUrl) {
+          localStorage.setItem('lineLoginToken', tokenFromUrl);
+          await verifyToken(tokenFromUrl);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (token) {
           await verifyToken(token);
         } else {
-          console.log('No token in localStorage, checking URL');
-          const urlParams = new URLSearchParams(window.location.search);
-          const tokenFromUrl = urlParams.get('token');
-
-          console.log('Token from URL:', tokenFromUrl ? tokenFromUrl.substring(0, 10) + '...' : 'null');
-
-          if (tokenFromUrl) {
-            console.log('Token found in URL, saving and verifying');
-            localStorage.setItem('lineLoginToken', tokenFromUrl);
-            await verifyToken(tokenFromUrl);
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } else {
-            console.log('No token found, setting logged out state');
-            setLoggedIn(false);
-            setUser(null);
-          }
+          await attemptAutoLogin();
         }
       } catch (error) {
         console.error('Initialization error:', error);
+        await attemptAutoLogin();
       } finally {
         setIsInitialized(true);
         setIsLoading(false);
-        console.log('Initialization complete');
       }
     };
 
     initialize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchConfig, verifyToken, setLoggedIn, setUser]);
+  }, [fetchConfig, verifyToken, attemptAutoLogin]);
 
-  const handleLogin = useCallback(async () => {
-    console.log('handleLogin called');
-
-    try {
-      const loginUrl = `${API_BASE_URL}/api/line/login?redirectUrl=${encodeURIComponent(window.location.href)}`;
-
-      console.log('Fetching login URL from:', loginUrl);
-      const response = await fetch(loginUrl);
-      const data = await response.json();
-
-      console.log('Login response:', data);
-
-      if (data.loginUrl) {
-        console.log('Redirecting to:', data.loginUrl);
-        window.location.href = data.loginUrl;
-      } else {
-        throw new Error('Login URL not received');
-      }
-    } catch (error) {
-      console.error('Error initiating login:', error);
-    }
-  }, []);
-
-  const handleLogout = useCallback(() => {
-    console.log('handleLogout called');
-    localStorage.removeItem('lineLoginToken');
-    setLoggedIn(false);
-    setUser(null);
-    tokenVerified.current = false;
-    console.log('Logout complete');
-  }, [setLoggedIn, setUser]);
-
-  const updateUserInfo = useCallback(async () => {
-    console.log('updateUserInfo called');
-
-    if (user) {
-      const token = localStorage.getItem('lineLoginToken');
-
-      console.log('Token for updating user info:', token ? token.substring(0, 10) + '...' : 'null');
-
-      if (token) {
-        await handleAuthStatus(token, user);
-      } else {
-        console.error('No token found for updating user info');
-      }
-    } else {
-      console.log('No user to update');
-    }
-  }, [user, handleAuthStatus]);
-
-  useEffect(() => {
-    const checkToken = async () => {
-      const token = localStorage.getItem('lineLoginToken');
-
-      if (token && !user) {
-        console.log('Token found, verifying...');
-        await verifyToken(token);
-      }
-    };
-
-    checkToken();
-  }, [verifyToken, user]);
-
-  return { isInitialized, isLoading, user, handleLogin, handleLogout, updateUserInfo };
+  return {
+    isInitialized,
+    isLoading,
+    user
+  };
 };
