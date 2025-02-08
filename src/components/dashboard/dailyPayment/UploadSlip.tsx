@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useDropzone } from 'react-dropzone';
 
+import CloseIcon from '@mui/icons-material/Close';
 
 import type { IDailyPayment } from '@/types/dailyPayment';
 import { usePaymentSlip } from '@/actions/backend/dailyPayment/usePaymentSlip';
@@ -112,7 +113,7 @@ const UploadSlip: React.FC<UploadSlipProps> = ({ payment, onPaymentUpdate, curre
 
 
           <div className='text-center bg-red-600 p-2 rounded-sm text-white'>
-            <p className='text-sm'>❌ ไม่รับ ธ.กรุงเทพฯ แนบสลิปไม่ได้ ❌</p>
+            <p className=' flex gap-1'><CloseIcon /> <span className='my-auto'>ไม่รับ ธ.กรุงเทพฯ แนบสลิปไม่ได้</span> <CloseIcon /></p>
           </div>
 
           <Avatar variant='rounded' className='bs-12 is-12 my-2'>
@@ -124,11 +125,11 @@ const UploadSlip: React.FC<UploadSlipProps> = ({ payment, onPaymentUpdate, curre
           </Typography>
 
 
-          <p className='text-xs text-center mt-2  bg-gray-100 p-2 rounded-sm'>
+          <p className='text-xs text-center mt-2 text-black font-bold  bg-gray-100 p-2 rounded-sm'>
             สามารถแนบสลิปได้ไม่จำกัดจนกว่าจะครบยอด
           </p>
 
-          <p className='text-xs text-center mt-2'>
+          <p className='text-xs text-center text-black font-bold mt-2'>
             สลิปที่ไม่มี QR CODE ไม่สามารถตรวจสอบยอดชำระได้ กรุณาส่งหลักฐานให้แอดมิน
           </p>
 

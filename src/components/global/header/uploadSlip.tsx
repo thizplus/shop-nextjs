@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useDropzone } from 'react-dropzone';
 
-
+import CloseIcon from '@mui/icons-material/Close';
 
 import type { TypeOrder } from '@/types/orderTypes';
 import actionVerifySlip from '@/actions/backend/slipOK/verifySlip';
@@ -157,7 +157,7 @@ const UploadSlip: React.FC<propsOrder> = ({ order, onPaymentUpdate, currentPayme
         <div className='flex items-center flex-col border-dashed border-[1px] rounded-md px-4 py-4 cursor-pointer my-2'>
 
           <div className='text-center bg-red-600 p-2 rounded-sm text-white'>
-            <p className='text-sm'>❌ ไม่รับ ธ.กรุงเทพฯ แนบสลิปไม่ได้ ❌</p>
+            <p className='flex gap-1'><CloseIcon /> <span className='my-auto'>ไม่รับ ธ.กรุงเทพฯ แนบสลิปไม่ได้</span> <CloseIcon /></p>
           </div>
 
 
@@ -168,13 +168,15 @@ const UploadSlip: React.FC<propsOrder> = ({ order, onPaymentUpdate, currentPayme
             {isDragActive ? 'วางไฟล์ที่นี่' : 'กรุณาอัพโหลดสลิปโอนเงิน'}
           </Typography>
           <CountdownTimer expireDate={order.expire} onExpire={onExpire} />
-          <p className='text-xs text-center mt-2  bg-gray-100 p-2 rounded-sm'>
+
+          <p className='text-xs text-center mt-2 text-black font-bold  bg-gray-100 p-2 rounded-sm'>
             สามารถแนบสลิปได้ไม่จำกัดจนกว่าจะครบยอด
           </p>
 
-          <p className='text-xs text-center mt-2'>
+          <p className='text-xs text-center text-black font-bold mt-2'>
             สลิปที่ไม่มี QR CODE ไม่สามารถตรวจสอบยอดชำระได้ กรุณาส่งหลักฐานให้แอดมิน
           </p>
+
         </div>
       </div>
       {file && (

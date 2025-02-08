@@ -24,8 +24,6 @@ type PropsMainStore = {
 
 const MainStore = ({ priceId, liffId }: PropsMainStore) => {
 
-  console.log('priceId', priceId)
-  console.log('liffId', liffId)
 
   const { isLiffLoading, liffError } = useLiffAuth(liffId, priceId);
   const { user, isLoggedIn } = useClientStores();

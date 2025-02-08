@@ -20,6 +20,7 @@ import type { TypeClient } from "@/types/clientTypes";
 import PriceAutocomplete from './PriceAutocomplete';
 import GrabDeliverySwitch from './GrabDeliverySwitch';
 import CustomPriceDialog from './CustomPriceDialog';
+import PinManagementDialog from './PinManagementDialog';
 
 
 
@@ -109,6 +110,9 @@ const MainClient = () => {
       gap: 2,
       alignItems: 'center',
     }}>
+
+      <PinManagementDialog userId={row.userId} displayName={row.displayName} />
+
       <CustomPriceDialog
         userId={row.userId}
         currentPrices={row.customPrices || []}
