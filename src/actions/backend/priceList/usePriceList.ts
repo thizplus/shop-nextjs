@@ -13,18 +13,30 @@ const useCreatePriceList = () => {
 
   return useMutation({
     mutationFn: async ({ priceName, idPrice }: CreatePriceListParams) => {
+      console.log('Mutation payload:', { priceName, idPrice })
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/price-list/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceName, idPrice })
+        body: JSON.stringify({
+          priceName,
+          idPrice: idPrice || '' // ส่งค่าว่างถ้าไม่มี idPrice
+        })
       });
 
-      if (!response.ok) throw new Error('Failed to create price list');
+      if (!response.ok) {
+        const errorData = await response.json()
+
+        throw new Error(errorData.message || 'Failed to create price list')
+      }
 
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['priceLists'] });
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error)
     }
   });
 };

@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useDropzone } from 'react-dropzone';
 
+
 import type { IDailyPayment } from '@/types/dailyPayment';
 import { usePaymentSlip } from '@/actions/backend/dailyPayment/usePaymentSlip';
 
@@ -108,15 +109,29 @@ const UploadSlip: React.FC<UploadSlipProps> = ({ payment, onPaymentUpdate, curre
       <div {...getRootProps({ className: `dropzone ${isDragActive ? 'active' : ''}` })}>
         <input {...getInputProps()} />
         <div className='flex items-center flex-col border-dashed border-[1px] rounded-md px-8 py-4 cursor-pointer my-2'>
-          <Avatar variant='rounded' className='bs-12 is-12'>
+
+
+          <div className='text-center bg-red-600 p-2 rounded-sm text-white'>
+            <p className='text-sm'>❌ ไม่รับ ธ.กรุงเทพฯ แนบสลิปไม่ได้ ❌</p>
+          </div>
+
+          <Avatar variant='rounded' className='bs-12 is-12 my-2'>
             <i className='tabler-upload' />
           </Avatar>
+
           <Typography variant='h6' className='mb-0 leading-none'>
             {isDragActive ? 'วางไฟล์ที่นี่' : 'อัพโหลดสลิปโอนเงิน'}
           </Typography>
-          <p className='text-xs text-center mt-2'>
-            รองรับไฟล์ภาพ .jpg, .jpeg, .png
+
+
+          <p className='text-xs text-center mt-2  bg-gray-100 p-2 rounded-sm'>
+            สามารถแนบสลิปได้ไม่จำกัดจนกว่าจะครบยอด
           </p>
+
+          <p className='text-xs text-center mt-2'>
+            สลิปที่ไม่มี QR CODE ไม่สามารถตรวจสอบยอดชำระได้ กรุณาส่งหลักฐานให้แอดมิน
+          </p>
+
         </div>
       </div>
 

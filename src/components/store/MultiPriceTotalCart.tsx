@@ -350,7 +350,7 @@ const MultiPriceTotalCart: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>กำลังโหลดข้อมูล...</div>;
   if (error) return <div>Error: {error}</div>;
 
   const primaryColor = config?.displayConfig.primaryColor ? config?.displayConfig.primaryColor : '#000000'

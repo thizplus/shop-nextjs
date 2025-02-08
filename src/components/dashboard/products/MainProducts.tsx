@@ -6,7 +6,7 @@ import Button from '@mui/material/Button';
 
 import Divider from '@mui/material/Divider';
 
-import { Box, IconButton } from '@mui/material';
+import { Box, Chip, IconButton } from '@mui/material';
 
 import BtnImport from "@/components/dashboard/products/btnImport";
 import type { Column } from "@/components/global/EnhancedTable";
@@ -55,9 +55,21 @@ const columns: Column<TypesProduct>[] = [
     id: 'active',
     numeric: false,
     disablePadding: false,
-    label: 'Active',
-    format: (value: boolean) => value ? 'Yes' : 'No'
-  },
+    label: 'สถานะ',
+    format: (value: boolean) => (
+      <Chip
+        label={value ? 'เปิด' : 'ปิด'}
+        color={value ? 'success' : 'error'}
+        size="small"
+        sx={{
+          minWidth: '60px',
+          '& .MuiChip-label': {
+            px: 1
+          }
+        }}
+      />
+    )
+  }
 
   /*
   {
@@ -165,7 +177,7 @@ const MainProducts = () => {
       display: 'flex',
       gap: 2,
       alignItems: 'center',
-      minWidth: '400px' // ปรับความกว้างตามจำนวน price editors
+      minWidth: '100px' // ปรับความกว้างตามจำนวน price editors
     }}>
       {/**
        * <StatusSwitch items={row} />
@@ -205,7 +217,7 @@ const MainProducts = () => {
   const error = isSearching ? errorSearch : errorAll;
   const data = isSearching ? searchData : allProductsData;
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>กำลังโหลดข้อมูล...</div>;
   if (isError) return <div>Error: {error instanceof Error ? error.message : 'An unknown error occurred'}</div>;
 
   if (!data || !Array.isArray(data.items)) {

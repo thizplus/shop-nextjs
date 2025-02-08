@@ -60,31 +60,44 @@ const useManualSlipUpload = ({ order, onSuccess }: UseManualSlipUploadProps): Us
     setUploadResult(null);
 
     try {
-      // 1. Upload slip to Firebase
+      // สร้าง blob จากไฟล์
+      const blob = new Blob([file], { type: 'image/jpeg' });
+
+      // สร้าง FormData
       const uploadFormData = new FormData();
 
-      uploadFormData.append('file', file);
+      uploadFormData.append('file', blob, file.name);
 
+      // เพิ่ม headers และ mode
       const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/slipOK/upload-slip`, {
         method: 'POST',
         body: uploadFormData,
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json'
+        }
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('การอัปโหลดสลิปล้มเหลว');
+        const errorText = await uploadResponse.text();
+
+        console.error('Upload error response:', errorText);
+        throw new Error(`การอัปโหลดสลิปล้มเหลว: ${errorText}`);
       }
 
       const uploadResult = await uploadResponse.json();
       const slipUrl = uploadResult.url;
 
-      // 2. Update payment status in your system
+      // ส่วนที่เหลือคงเดิม...
       const paymentResponse = await fetch(
         `${process.env.NEXT_PUBLIC_SERVER_URL}/api/orders/${order.orderId}/payment`,
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json'
           },
+          mode: 'cors',
           body: JSON.stringify({
             slipUrl,
             verifyResult: {
@@ -98,7 +111,10 @@ const useManualSlipUpload = ({ order, onSuccess }: UseManualSlipUploadProps): Us
       );
 
       if (!paymentResponse.ok) {
-        throw new Error('ไม่สามารถอัปเดตสถานะการชำระเงินได้');
+        const errorText = await paymentResponse.text();
+
+        console.error('Payment error response:', errorText);
+        throw new Error(`ไม่สามารถอัปเดตสถานะการชำระเงินได้: ${errorText}`);
       }
 
       const paymentResult = await paymentResponse.json();

@@ -24,7 +24,7 @@ const columns: Column<TypeOrder>[] = [
     id: 'orderId',
     numeric: false,
     disablePadding: false,
-    label: 'Order ID'
+    label: 'คำสั่งซื้อ'
   },
   {
     id: 'shippingInfo',
@@ -143,7 +143,7 @@ const MainOrders = () => {
   const error = isSearching ? errorSearch : errorAll;
   const data = isSearching ? searchData : allOrdersData;
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>กำลังโหลดข้อมูล...</div>;
   if (isError) return <div>Error: {error instanceof Error ? error.message : 'An unknown error occurred'}</div>;
 
   if (!data || !Array.isArray(data.items)) {
@@ -151,6 +151,18 @@ const MainOrders = () => {
 
     return <div>Error: Invalid data received from the server</div>;
   }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      // ถ้ากด Enter และมีข้อความค้นหา
+      if (searchQuery.trim()) {
+        handleSearch();
+      }
+    } else if (event.key === 'Escape') {
+      // ถ้ากด Esc
+      handleResetSearch();
+    }
+  };
 
   return (
     <>
@@ -161,6 +173,8 @@ const MainOrders = () => {
             label="ค้นหาจาก Order ID, ชื่อลูกค้า"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+            onKeyDown={handleKeyDown}  // เพิ่ม event handler
             size="small"
             sx={{
               '& .MuiInputBase-root': {

@@ -11,3 +11,10 @@ export type TypePrice = {
 }
 
 
+export interface PriceConfig {
+  priceId: string;
+  priceName: string;
+  status: boolean;
+  LIFF_ID?: string;
+  allowedUsers: string[];
+}

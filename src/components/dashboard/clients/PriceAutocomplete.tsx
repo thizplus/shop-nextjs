@@ -38,7 +38,7 @@ const PriceAutocomplete = ({ userId, currentPrices, onPricesChange }: Props) => 
     return <TextField
       size="small"
       disabled
-      value="Loading..."
+      value="กำลังโหลดข้อมูล..."
       sx={{ minWidth: '200px' }}
     />;
   }

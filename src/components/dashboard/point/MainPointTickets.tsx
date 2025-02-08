@@ -121,7 +121,7 @@ const MainPointTickets = () => {
   );
 
   // Loading and Error States
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>กำลังโหลดข้อมูล...</div>;
   if (isError) return <div>Error: {error instanceof Error ? error.message : 'An unknown error occurred'}</div>;
 
   if (!data || !Array.isArray(data.items)) {

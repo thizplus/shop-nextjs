@@ -1,4 +1,4 @@
-// @/actions/products/imports.ts
+// @/actions/backend/setting/getStoreConfig.ts
 
 const actionGetStoreConfig = async () => {
   try {

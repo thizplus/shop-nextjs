@@ -1,3 +1,6 @@
+
+//store/configStore.ts
+
 import { create } from 'zustand'
 
 import actionGetStoreConfig from '@/actions/backend/setting/getStoreConfig'

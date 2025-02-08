@@ -19,7 +19,7 @@ const PointSettingManager = () => {
   const { data: setting, isLoading } = usePointSetting();
   const updateMutation = useUpdatePointSetting();
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>กำลังโหลดข้อมูล...</div>;
 
   return (
     <Card>

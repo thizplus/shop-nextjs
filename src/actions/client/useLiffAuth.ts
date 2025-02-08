@@ -1,35 +1,52 @@
+// hooks/useLiffAuth.ts
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 import { liff } from '@line/liff';
 
-import { useConfigStore } from '@/stores/configStore';
 import { useClientStores } from '@/stores/authStore';
 import type { TypeClientVerify } from '@/types/clientTypes';
 
-export const useLiffAuth = (priceId?: string) => {
+export const useLiffAuth = (liffId?: string, priceId?: string) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLiffLoading, setIsLiffLoading] = useState(true);
   const [liffError, setLiffError] = useState<string | null>(null);
-  const { config, fetchConfig } = useConfigStore();
   const { user, setUser, setLoggedIn } = useClientStores();
+
   const initAttempted = useRef(false);
   const loginAttempted = useRef(false);
 
-  const getLiffId = useCallback((config: any, priceId?: string): string | null => {
-    if (!config) return null;
+  // Validate required params
+  useEffect(() => {
+    if (!priceId) {
+      console.error('priceId is required for LIFF authentication');
+      setLiffError('ไม่พบข้อมูลร้านค้า');
+      setIsLiffLoading(false);
 
-    if (priceId && priceId !== 'store') {
-      const priceConfig = config.saleModel.listPrice.find((price: any) => price.id === priceId);
+      return;
+    }
+  }, [priceId]);
 
+  // Function to get correct LIFF ID with validation
+  const getLiffId = useCallback(async (): Promise<string | null> => {
+    if (!liffId) {
+      console.warn('LIFF ID not provided');
 
-      return priceConfig?.LIFF_ID || null;
+      return null;
     }
 
-    return config.lineLogin.LINE_LIFF_ID || null;
-  }, []);
 
-  const initializeLiff = useCallback(async (liffId: string) => {
-    if (!liffId || initAttempted.current) {
+    return liffId;
+  }, [liffId]);
+
+  const initializeLiff = useCallback(async (currentLiffId: string) => {
+    if (!currentLiffId || initAttempted.current) {
+      setIsLiffLoading(false);
+
+      return;
+    }
+
+    if (!priceId) {
+      setLiffError('ไม่พบข้อมูลร้านค้า');
       setIsLiffLoading(false);
 
       return;
@@ -40,7 +57,7 @@ export const useLiffAuth = (priceId?: string) => {
 
     try {
       await liff.init({
-        liffId,
+        liffId: currentLiffId,
         withLoginOnExternalBrowser: true
       });
 
@@ -51,8 +68,14 @@ export const useLiffAuth = (priceId?: string) => {
 
       if (!isLoggedIn && !loginAttempted.current) {
         loginAttempted.current = true;
-        console.log('Redirecting to LINE login...');
-        liff.login({ redirectUri: window.location.href });
+
+        // สร้าง redirect URL ที่มี priceId
+        const currentUrl = new URL(window.location.href);
+
+        currentUrl.pathname = `/wholesale/${priceId}`;
+
+        console.log('Redirecting to LINE login with URL:', currentUrl.toString());
+        liff.login({ redirectUri: currentUrl.toString() });
 
         return;
       }
@@ -65,17 +88,14 @@ export const useLiffAuth = (priceId?: string) => {
           throw new Error('No access token available');
         }
 
-        // สร้าง user profile ตาม context
+        // สร้าง user profile with validation
         const userProfile: TypeClientVerify = {
           userId: profile.userId,
           displayName: profile.displayName,
           pictureUrl: profile.pictureUrl || '',
-          userType: priceId && priceId !== 'store' ? 'wholesale' : 'store',
-          idType: priceId || 'store'
+          userType: priceId === 'store' ? 'store' : 'wholesale',
+          idType: priceId // ใช้ priceId โดยตรง ไม่ต้องมีเงื่อนไข
         };
-
-        //  console.log('Verifying with profile:', userProfile);
-        // console.log('Access Token:', accessToken);
 
         // ส่ง request ไปยัง backend
         const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/line/verify`, {
@@ -95,8 +115,6 @@ export const useLiffAuth = (priceId?: string) => {
 
         const updatedProfile = await response.json();
 
-        // console.log('Backend verification successful:', updatedProfile);
-
         setUser(updatedProfile);
         setLoggedIn(true);
         setIsInitialized(true);
@@ -112,36 +130,24 @@ export const useLiffAuth = (priceId?: string) => {
     } finally {
       setIsLiffLoading(false);
     }
-  }, [priceId, setUser, setLoggedIn]); // เพิ่ม priceId เข้าไปใน dependencies
+  }, [priceId, setUser, setLoggedIn]);
 
-  // Single effect for initialization
   useEffect(() => {
     const initialize = async () => {
-      try {
-        if (!config) {
-          await fetchConfig();
+      if (!isInitialized && !initAttempted.current && priceId) {
+        const currentLiffId = await getLiffId();
 
-          return;
+        if (currentLiffId) {
+          await initializeLiff(currentLiffId);
+        } else {
+          setLiffError('LIFF ID not found');
+          setIsLiffLoading(false);
         }
-
-        const liffId = getLiffId(config, priceId);
-
-        if (!liffId) {
-          throw new Error('LIFF ID not found');
-        }
-
-        await initializeLiff(liffId);
-      } catch (error) {
-        console.error('Initialization error:', error);
-        setLiffError(error instanceof Error ? error.message : 'Initialization failed');
-        setIsLiffLoading(false);
       }
     };
 
-    if (!isInitialized && !initAttempted.current) {
-      initialize();
-    }
-  }, [config, fetchConfig, initializeLiff, priceId, getLiffId, isInitialized]);
+    initialize();
+  }, [getLiffId, initializeLiff, isInitialized, priceId]);
 
   const handleLogout = useCallback(() => {
     if (liff) {
@@ -152,8 +158,14 @@ export const useLiffAuth = (priceId?: string) => {
     setUser(null);
     initAttempted.current = false;
     loginAttempted.current = false;
-    window.location.reload(); // Refresh page after logout
-  }, [setLoggedIn, setUser]);
+
+    // Redirect to the correct URL after logout
+    if (priceId) {
+      window.location.href = `/wholesale/${priceId}`;
+    } else {
+      window.location.reload();
+    }
+  }, [setLoggedIn, setUser, priceId]);
 
   return {
     isInitialized,

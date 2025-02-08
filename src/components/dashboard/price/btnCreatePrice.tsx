@@ -39,11 +39,15 @@ const BtnCreatePrice = ({ listItems }: Props) => {
   const handleCreate = async () => {
     if (!priceName.trim()) return
 
+    const payload = {
+      priceName: priceName.trim(),
+      idPrice: idPrice.trim(),
+    }
+
+    console.log('Sending payload:', payload)
+
     try {
-      await createMutation.mutateAsync({
-        priceName: priceName.trim(),
-        idPrice: idPrice.trim(),
-      })
+      await createMutation.mutateAsync(payload)
 
       setSnackbar({
         open: true,

@@ -25,12 +25,12 @@ import CustomPriceDialog from './CustomPriceDialog';
 
 const columns: Column<TypeClient>[] = [
   //{ id: 'userId', numeric: true, disablePadding: false, label: 'ID' },
-  { id: 'displayName', numeric: false, disablePadding: false, label: 'Display Name' },
+  { id: 'displayName', numeric: false, disablePadding: false, label: 'ชื่อไลน์' },
   {
     id: 'updatedAt',
     numeric: false,
     disablePadding: false,
-    label: 'Last Updated',
+    label: 'เคลื่อนไหวล่าสุด',
     format: (value: Date) => new Date(value).toLocaleString()
   },
 ];
@@ -105,6 +105,7 @@ const MainClient = () => {
   const renderActions = (row: TypeClient) => (
     <Box sx={{
       display: 'flex',
+      flexWrap: 'wrap',
       gap: 2,
       alignItems: 'center',
     }}>
@@ -134,7 +135,7 @@ const MainClient = () => {
   const error = isSearching ? errorSearch : errorAll;
   const data = isSearching ? searchData : allProductsData;
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>กำลังโหลดข้อมูล...</div>;
   if (isError) return <div>Error: {error instanceof Error ? error.message : 'An unknown error occurred'}</div>;
 
   if (!data || !Array.isArray(data.items)) {
@@ -142,6 +143,18 @@ const MainClient = () => {
 
     return <div>Error: Invalid data received from the server</div>;
   }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      // ถ้ากด Enter และมีข้อความค้นหา
+      if (searchQuery.trim()) {
+        handleSearch();
+      }
+    } else if (event.key === 'Escape') {
+      // ถ้ากด Esc
+      handleResetSearch();
+    }
+  };
 
   return (
     <>
@@ -153,6 +166,8 @@ const MainClient = () => {
             label="ค้นหาจากชื่อไลน์"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+            onKeyDown={handleKeyDown}  // เพิ่ม event handler
             size="small"
             sx={{
               '& .MuiInputBase-root': {

@@ -17,9 +17,17 @@ import PriceTicker from '../global/PriceTicker';
 import { usePin } from '@/actions/client/usePin';
 import PinDialog from '../global/PinDialog';
 
+type PropsMainStore = {
+  priceId: string;
+  liffId?: string;
+};
 
-const MainStore = () => {
-  const { isLiffLoading, liffError } = useLiffAuth();
+const MainStore = ({ priceId, liffId }: PropsMainStore) => {
+
+  console.log('priceId', priceId)
+  console.log('liffId', liffId)
+
+  const { isLiffLoading, liffError } = useLiffAuth(liffId, priceId);
   const { user, isLoggedIn } = useClientStores();
   const { config, fetchConfig, loading: configLoading } = useConfigStore();
   const [showPinDialog, setShowPinDialog] = useState(false);

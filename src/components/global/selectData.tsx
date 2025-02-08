@@ -53,7 +53,7 @@ const SelectData: React.FC<propsSelectData> = ({ items, onChange, value: propVal
         <em>ไม่คัดลอก</em>
       </MenuItem>
       {items.map((item) => (
-        <MenuItem key={item._id.toString()} value={item._id.toString()}>
+        <MenuItem key={item._id.toString()} value={item.priceId}>
           {item.priceName}
         </MenuItem>
       ))}

@@ -1,8 +1,8 @@
 /* ปรับขนาดและพื้นหลังของลูกศร */
 .swiper-button-next,
 .swiper-button-prev {
-  width: 30px; /* กำหนดขนาดความกว้าง */
-  height: 30px; /* กำหนดขนาดความสูง */
+  inline-size: 30px; /* กำหนดขนาดความกว้าง */
+  block-size: 30px; /* กำหนดขนาดความสูง */
   background-color: rgba(0, 0, 0, 0.5); /* เพิ่มพื้นหลัง */
   border-radius: 50%; /* ทำให้เป็นวงกลม */
   color: white; /* สีของลูกศร */
@@ -13,10 +13,10 @@
 
 /* ปรับตำแหน่งลูกศร */
 .swiper-button-next {
-  right: 10px; /* ระยะห่างจากขอบขวา */
+  inset-inline-end: 10px; /* ระยะห่างจากขอบขวา */
 }
 .swiper-button-prev {
-  left: 10px; /* ระยะห่างจากขอบซ้าย */
+  inset-inline-start: 10px; /* ระยะห่างจากขอบซ้าย */
 }
 
 .swiper-button-next:after,
@@ -28,10 +28,11 @@
 /* ปรับแต่งจุด (dot) */
 .swiper-pagination-bullet {
   background-color: transparent; /* สีของจุด */
-  width: 8px; /* ขนาดของจุด */
-  height: 8px; /* ขนาดของจุด */
+  inline-size: 8px; /* ขนาดของจุด */
+  block-size: 8px; /* ขนาดของจุด */
   opacity: 1; /* ให้จุดชัดเจน */
-  margin: 0 5px; /* ระยะห่างระหว่างจุด */
+  margin-block: 0;
+  margin-inline: 5px; /* ระยะห่างระหว่างจุด */
   border: 1px solid #000;
 }
 
@@ -41,5 +42,5 @@
 
 /* จัดตำแหน่ง pagination ให้อยู่ด้านล่าง */
 .swiper-pagination {
-  bottom: 10px; /* ระยะห่างจากด้านล่าง */
+  inset-block-end: 10px; /* ระยะห่างจากด้านล่าง */
 }

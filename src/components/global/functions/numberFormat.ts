@@ -1,6 +1,6 @@
 const numberFormatter = new Intl.NumberFormat('th-TH', {
   minimumFractionDigits: 0,
-  maximumFractionDigits: 0
+  maximumFractionDigits: 2
 });
 
 export const formatNumber = (value: number): string => {
