@@ -73,7 +73,7 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({ open, onClose, or
               <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                 ข้อมูลลูกค้า
               </Typography>
-              <Typography variant="body2" gutterBottom>ชื่อ: {order.shippingInfo.cusName}</Typography>
+              <Typography variant="body2" gutterBottom>ชื่อ: {order.shippingInfo.customerName}</Typography>
               <Typography variant="body2" gutterBottom>เบอร์โทร: {order.shippingInfo.cusTel}</Typography>
               <Typography variant="body2" gutterBottom>
                 ที่อยู่: {order.shippingInfo.addressNo}
@@ -183,11 +183,11 @@ const OrderDetailDialog: React.FC<OrderDetailDialogProps> = ({ open, onClose, or
                         ค่าบริการคลัง: {formatNumber(order.warehouseFees.totalFees)} บาท
                       </Typography>
                     )}
-                    {order.discountAmount > 0 && (
+                    {order.discountAmount ? (
                       <Typography variant="body2" color="error">
                         ส่วนลด: -{formatNumber(order.discountAmount)} บาท
                       </Typography>
-                    )}
+                    ) : null}
                     <Divider sx={{ my: 1 }} />
                     <Typography variant="subtitle2" fontWeight="bold">
                       ยอดรวมสุทธิ: {formatNumber(order.netTotal)} บาท

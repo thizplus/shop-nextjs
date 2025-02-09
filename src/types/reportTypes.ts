@@ -1,41 +1,71 @@
 // types/reportTypes.ts
+import type { ObjectId } from "mongodb";
 
-import type {
-  TypeOrder,
-  OrderProduct,
+// Base types
+export interface OrderProduct {
+  _id?: ObjectId;
+  sku: string;
+  name: string;
+  price: number;
+  qty: number;
+  total: number;
+}
 
-} from './orderTypes';
+export interface ShippingInfo {
+  _id: string;
+  customerName: string;
+  cusTel: string;
+  addressNo: string;
+  district: string;
+  amphoe: string;
+  province: string;
+  zipcode: string;
+  location?: string;
+  isDefault: boolean;
+  trackingNo?: string;
+  shippingChannel?: string;
+  trackingUpdateAt?: string | Date;
+}
 
-// เพิ่ม cost และ profit สำหรับแต่ละสินค้า
+// Report specific types
 export interface ReportOrderProduct extends OrderProduct {
   cost: number;
   totalCost: number;
   profit: number;
 }
 
-// ข้อมูลสรุปกำไร/ขาดทุน
 export interface ProfitSummary {
-  totalCost: number;    // ต้นทุนรวม
-  grossProfit: number;  // กำไรขั้นต้น
-  netProfit: number;    // กำไรสุทธิ
+  totalCost: number;
+  grossProfit: number;
+  netProfit: number;
   updatedAt?: Date;
 }
 
-// ค่าใช้จ่ายคลัง
 export interface WarehouseFees {
-  shippingCost: number;  // ค่าขนส่ง
-  serviceFee: number;    // ค่าบริการ
-  totalFees: number;     // รวมค่าใช้จ่าย
+  shippingCost: number;
+  serviceFee: number;
+  totalFees: number;
 }
 
-// Order ที่มีข้อมูลเพิ่มเติมสำหรับ Report
-export interface ReportOrder extends Omit<TypeOrder, 'listProducts'> {
+export interface ReportOrder {
+  orderId: string;
+  customerName: string;
+  totalAmount: number;
+  netTotal: number;
+  shippingCost: number;
+  status: string;
+  createdAt: string;
+  payment: {
+    amount: number;
+    status?: string;
+  };
+  shippingInfo: ShippingInfo;
   listProducts: ReportOrderProduct[];
   profitSummary?: ProfitSummary;
   warehouseFees?: WarehouseFees;
+  discountAmount?: number;
 }
 
-// สรุปรายวัน
 export interface DailySummary {
   totalOrders: number;
   totalShippingCost: number;
@@ -48,14 +78,12 @@ export interface DailySummary {
   totalWarehouseFees: number;
 }
 
-// รายงานรายวัน
 export interface DailyReport {
   date: string;
   orders: ReportOrder[];
   summary: DailySummary;
 }
 
-// ข้อมูลรายงานทั้งหมด
 export interface OrderReport {
   dailyReports: DailyReport[];
   summary: DailySummary;
@@ -65,7 +93,6 @@ export interface OrderReport {
   };
 }
 
-// ตัวเลือกในการดึงรายงาน
 export interface ReportOptions {
   startDate: Date;
   endDate: Date;
@@ -77,7 +104,6 @@ export interface ReportOptions {
   };
 }
 
-// Response จาก API
 export interface ReportResponse {
   success: boolean;
   data: OrderReport;
