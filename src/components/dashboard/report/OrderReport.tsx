@@ -23,6 +23,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import useOrderReport from '@/actions/backend/orders/useOrderReport';
 import PickersRange from './PickersRange';
 import type { DailyReport, OrderDetail } from '@/actions/backend/orders/useOrderReport';
+import { formatNumber } from '@/components/global/functions/numberFormat';
 
 const OrderReport = () => {
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([new Date(), new Date()]);
@@ -33,12 +34,7 @@ const OrderReport = () => {
 
   const { data, isLoading, error } = useOrderReport(dateRange[0], dateRange[1]);
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString('th-TH', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
+
 
   if (error) {
     return (
