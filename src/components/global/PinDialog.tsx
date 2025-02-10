@@ -39,9 +39,9 @@ const PinDialog: React.FC<PinDialogProps> = ({
       <DialogContent>
         <div className="h-full flex">
           <div className="p-4 leading-none text-center m-auto">
-            <p className="text-xl font-bold">     {hasPin ? 'กรุณายืนยัน PIN' : 'กรุณาตั้งค่า PIN'}</p>
+            <p className="text-4xl font-bold animate-bounce">     {hasPin ? 'ใส่รหัสผ่านของคุณ' : 'ตั้งรหัสผ่าน'}</p>
             <p className="mb-4 text-center">
-              {hasPin ? 'กรุณาใส่รหัสให้ถูกต้อง' : 'ตั้งรหัสผ่านของคุณ 6 หลัก'}
+              {hasPin ? 'กรุณาใส่รหัสให้ถูกต้อง' : 'กรุณาใช้รหัสผ่านที่คุณจำได้'}
             </p>
             <PinInput
               onSubmit={onPinSubmit}

@@ -7,6 +7,7 @@ import { formatNumber } from '@/components/global/functions/numberFormat';
 import UploadSlip from './uploadSlip';
 import BtnVoidOrder from './voidOrder';
 import { useCouponApply } from '@/actions/backend/coupons/useCouponApply';
+import { useDownloadQR } from '@/actions/backend/clients/useDownloadQR';
 
 interface PaymentProps {
   paymentData: TypeOrder;
@@ -20,6 +21,11 @@ const Payment: React.FC<PaymentProps> = ({ paymentData, onClose, onOpen, onUpdat
   const [isFullyPaid, setIsFullyPaid] = useState(false);
   const [currentPayment, setCurrentPayment] = useState(paymentData.payment);
   const [isExpired, setIsExpired] = useState(false);
+
+  const { downloadQR, isDownloading, error } = useDownloadQR({
+    orderId: paymentData.orderId
+  });
+
   const { applyCoupon } = useCouponApply();
 
   useEffect(() => {
@@ -122,6 +128,29 @@ const Payment: React.FC<PaymentProps> = ({ paymentData, onClose, onOpen, onUpdat
         {qr && !isExpired && (
           <div className='mb-2'>
             <img src={qr} alt='QR Payment' className='w-full' />
+            <Button
+              fullWidth
+              variant="contained" // เปลี่ยนจาก outlined เป็น contained
+              size="small"
+              startIcon={<i className="tabler-download" />}
+              onClick={() => downloadQR(qr)}
+              disabled={isDownloading}
+
+              sx={{
+                mt: 1,
+                bgcolor: '#295077',
+                '&:hover': {
+                  bgcolor: '#295077' // สีเข้มขึ้นเล็กน้อยเวลา hover
+                }
+              }}
+            >
+              {isDownloading ? 'กำลังดาวน์โหลด...' : 'ดาวน์โหลดรูปภาพ QR'}
+            </Button>
+            {error && (
+              <Alert severity="error" sx={{ mt: 1 }}>
+                {error}
+              </Alert>
+            )}
           </div>
         )}
 

@@ -38,7 +38,7 @@ const PinInput: React.FC<PinInputProps> = ({ onSubmit, isVerifying, error }) => 
           type={showPin ? "text" : "password"}
           value={pin}
           onChange={handlePinChange}
-          placeholder="PIN 6 หลัก"
+          placeholder="รหัส 6 หลัก"
           inputProps={{
             maxLength: 6,
             pattern: "[0-9]*",

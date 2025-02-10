@@ -6,7 +6,7 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -21,18 +21,42 @@ import PriceAutocomplete from './PriceAutocomplete';
 import GrabDeliverySwitch from './GrabDeliverySwitch';
 import CustomPriceDialog from './CustomPriceDialog';
 import PinManagementDialog from './PinManagementDialog';
+import CustomAvatar from '@/@core/components/mui/Avatar';
+import formatThaiDateTime from '@/components/global/functions/formatThaiDateTime';
 
 
 
 const columns: Column<TypeClient>[] = [
   //{ id: 'userId', numeric: true, disablePadding: false, label: 'ID' },
-  { id: 'displayName', numeric: false, disablePadding: false, label: 'ชื่อไลน์' },
+  {
+    id: 'displayName',
+    numeric: false,
+    disablePadding: false,
+    label: 'ลูกค้า',
+    format: (value, row) => (
+      <div className="flex items-center gap-3">
+        <CustomAvatar
+          src={row.pictureUrl}
+          alt={value}
+          size={32}
+        />
+        <div className="flex flex-col">
+          <Typography className="font-medium text-sm leading-none">
+            {value}
+          </Typography>
+          <Typography variant="caption" className="text-xs" color="text.secondary">
+            {row.isPinVerified === true ? 'มี PIN' : 'ไม่มี PIN'}
+          </Typography>
+        </div>
+      </div>
+    )
+  },
   {
     id: 'updatedAt',
     numeric: false,
     disablePadding: false,
     label: 'เคลื่อนไหวล่าสุด',
-    format: (value: Date) => new Date(value).toLocaleString()
+    format: (value: Date) => formatThaiDateTime(value.toLocaleString())
   },
 ];
 

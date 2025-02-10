@@ -113,6 +113,11 @@ const ListsShipping: React.FC = () => {
                   key={address._id}
                   value={address._id}
                   control={<Radio />}
+                  sx={{
+                    marginRight: 0,
+                    marginLeft: 0,
+                    width: '100%'
+                  }}
                   className='border p-2 rounded-md mb-2 cursor-pointer'
                   label={
 

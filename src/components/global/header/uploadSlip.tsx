@@ -10,6 +10,8 @@ import { useDropzone } from 'react-dropzone';
 
 import CloseIcon from '@mui/icons-material/Close';
 
+import { Chip } from '@mui/material';
+
 import type { TypeOrder } from '@/types/orderTypes';
 import actionVerifySlip from '@/actions/backend/slipOK/verifySlip';
 import CountdownTimer from './CountdownTimer';
@@ -154,26 +156,27 @@ const UploadSlip: React.FC<propsOrder> = ({ order, onPaymentUpdate, currentPayme
     <>
       <div {...getRootProps({ className: `dropzone ${isDragActive ? 'active' : ''}` })}>
         <input {...getInputProps()} />
-        <div className='flex items-center flex-col border-dashed border-[1px] rounded-md px-4 py-4 cursor-pointer my-2'>
 
-          <div className='text-center bg-red-600 p-2 rounded-sm text-white'>
-            <p className='flex gap-1'><CloseIcon /> <span className='my-auto'>ไม่รับ ธ.กรุงเทพฯ แนบสลิปไม่ได้</span> <CloseIcon /></p>
-          </div>
+        <Chip icon={<CloseIcon />} className='w-full mt-2' color='error' label="ไม่รับ ธ.กรุงเทพฯ แนบสลิปไม่ได้" />
+
+        <div className='flex items-center flex-col border-dashed border-[1px]  rounded-md px-4 py-4 cursor-pointer my-2 '>
 
 
-          <Avatar variant='rounded' className='bs-12 is-12 my-2'>
+
+
+          <Avatar variant='rounded' className='bs-12 is-12 my-2 bg-[#54d400] text-white animate-bounce'>
             <i className='tabler-upload' />
           </Avatar>
-          <Typography variant='h6' className='mb-0 leading-none'>
-            {isDragActive ? 'วางไฟล์ที่นี่' : 'กรุณาอัพโหลดสลิปโอนเงิน'}
+          <Typography variant='h6' className='mb-0 leading-none underline'>
+            {isDragActive ? 'วางไฟล์ที่นี่' : 'กดที่นี่เพื่อแนบสลิป'}
           </Typography>
           <CountdownTimer expireDate={order.expire} onExpire={onExpire} />
 
-          <p className='text-xs text-center mt-2 text-black font-bold  bg-gray-100 p-2 rounded-sm'>
+          <p className='text-xs text-center mt-2 text-gray-500 font-bold  bg-gray-100 p-2 rounded-sm'>
             สามารถแนบสลิปได้ไม่จำกัดจนกว่าจะครบยอด
           </p>
 
-          <p className='text-xs text-center text-black font-bold mt-2'>
+          <p className='text-xs text-center text-gray-400 mt-2'>
             สลิปที่ไม่มี QR CODE ไม่สามารถตรวจสอบยอดชำระได้ กรุณาส่งหลักฐานให้แอดมิน
           </p>
 

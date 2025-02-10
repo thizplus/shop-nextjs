@@ -1,4 +1,3 @@
-// components/statistics/TopProducts.tsx
 import { useState, useMemo } from 'react'
 
 import Card from '@mui/material/Card'
@@ -7,8 +6,7 @@ import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import Tooltip from '@mui/material/Tooltip'
 import Box from '@mui/material/Box'
-
-
+import Pagination from '@mui/material/Pagination'
 
 interface Product {
   sku: string
@@ -26,43 +24,38 @@ interface TopProductsProps {
   products: Product[]
 }
 
-const sortOptions = [
-  'ยอดขายสูงสุด',
-  'ยอดขายต่ำสุด',
-  'จำนวนขายมากสุด',
-  'จำนวนขายน้อยสุด'
-]
-
 const TopProducts = ({ products }: TopProductsProps) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [sortOption, setSortOption] = useState<string>(sortOptions[0])
+  const [page, setPage] = useState(1)
+  const itemsPerPage = 5
 
-
-
+  // เรียงลำดับสินค้าตามยอดขายสูงสุด
   const sortedProducts = useMemo(() => {
-    const sorted = [...products]
+    return [...products].sort((a, b) => b.totalAmount - a.totalAmount)
+  }, [products])
 
-    switch (sortOption) {
-      case 'ยอดขายสูงสุด':
-        return sorted.sort((a, b) => b.totalAmount - a.totalAmount)
-      case 'ยอดขายต่ำสุด':
-        return sorted.sort((a, b) => a.totalAmount - b.totalAmount)
-      case 'จำนวนขายมากสุด':
-        return sorted.sort((a, b) => b.totalQty - a.totalQty)
-      case 'จำนวนขายน้อยสุด':
-        return sorted.sort((a, b) => a.totalQty - b.totalQty)
-      default:
-        return sorted
-    }
-  }, [products, sortOption])
+  // คำนวณข้อมูลสำหรับหน้าปัจจุบัน
+  const currentProducts = useMemo(() => {
+    const startIndex = (page - 1) * itemsPerPage
+
+
+    return sortedProducts.slice(startIndex, startIndex + itemsPerPage)
+  }, [sortedProducts, page])
+
+  // คำนวณจำนวนหน้าทั้งหมด
+  const pageCount = Math.ceil(products.length / itemsPerPage)
+  const showPagination = products.length > itemsPerPage
+
+  const handlePageChange = (event: unknown, newPage: number) => {
+    setPage(newPage)
+  }
 
   return (
-    <Card>
+    <Card className='md:min-h-96'>
       <CardHeader
-        title='สินค้าขายดี 10 อันดับ'
+        title={`สินค้าขายดี (${products.length} รายการ)`}
       />
       <CardContent className='flex flex-col'>
-        {sortedProducts.map((item) => (
+        {currentProducts.map((item) => (
           <Box
             key={item.sku}
             className='flex items-center gap-4'
@@ -77,8 +70,8 @@ const TopProducts = ({ products }: TopProductsProps) => {
               src={item.imagePath || '/images/products/default-product.png'}
               alt={item.name}
               sx={{
-                width: 46,
-                height: 46,
+                width: 34,
+                height: 34,
                 objectFit: 'cover',
                 borderRadius: 1,
                 flexShrink: 0
@@ -88,7 +81,7 @@ const TopProducts = ({ products }: TopProductsProps) => {
               <Box className='flex flex-col min-w-0'>
                 <Tooltip title={item.name} placement="top">
                   <Typography
-                    className='font-medium'
+                    className='font-medium text-sm leading-none'
                     color='text.primary'
                     sx={{
                       overflow: 'hidden',
@@ -102,6 +95,7 @@ const TopProducts = ({ products }: TopProductsProps) => {
                 </Tooltip>
                 <Typography
                   variant='body2'
+                  className='text-xs'
                   color='text.secondary'
                   sx={{
                     overflow: 'hidden',
@@ -114,16 +108,30 @@ const TopProducts = ({ products }: TopProductsProps) => {
                 </Typography>
               </Box>
               <Box className='flex flex-col items-end ml-2'>
-                <Typography className='font-medium whitespace-nowrap' color='text.primary'>
+                <Typography className='font-medium whitespace-nowrap leading-none text-sm' color='text.primary'>
                   ฿{item.totalAmount.toLocaleString()}
                 </Typography>
-                <Typography variant='body2' color='text.secondary' className='whitespace-nowrap'>
+                <Typography variant='body2' color='text.secondary' className='whitespace-nowrap text-xs'>
                   {item.totalQty.toLocaleString()} ชิ้น
                 </Typography>
               </Box>
             </Box>
           </Box>
         ))}
+
+        {/* Pagination - แสดงเฉพาะเมื่อมีข้อมูลเกิน itemsPerPage */}
+        {showPagination && (
+          <div className='flex justify-center'>
+            <Pagination
+              count={pageCount}
+              page={page}
+              onChange={handlePageChange}
+              variant="outlined"
+              shape="rounded"
+              size='small'
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   )

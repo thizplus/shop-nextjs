@@ -7,7 +7,22 @@ const nextConfig = {
     NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME
   },
 
-  // TODO: below line is added to resolve twice event dispatch in the calendar reducer
+  // เพิ่ม async headers
+  async headers() {
+    return [
+      {
+        // ใช้กับทุก route
+        source: '/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, Accept' }
+        ]
+      }
+    ]
+  },
+
   reactStrictMode: false
 }
 

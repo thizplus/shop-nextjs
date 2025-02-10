@@ -1,5 +1,10 @@
 import React from 'react';
 
+import { Chip } from '@mui/material';
+
+
+import EditLocationAltIcon from '@mui/icons-material/EditLocationAlt';
+
 import ListShipping from "./listShipping";
 import { useShippingStore } from '@/stores/shippingStore';
 
@@ -26,7 +31,11 @@ const ShippingInfo: React.FC = () => {
           </div>
         </div>
       ) : (
-        <p>กรุณาเลือกที่อยู่จัดส่ง</p>
+
+
+        <Chip icon={<EditLocationAltIcon />} className='w-full' color='error' label="กรุณาตั้งค่าการจัดส่งก่อนทำรายการ" />
+
+
       )}
     </>
   );
