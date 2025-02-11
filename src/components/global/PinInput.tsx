@@ -87,7 +87,7 @@ const PinInput: React.FC<PinInputProps> = ({ onSubmit, isVerifying, error }) => 
         disabled={isVerifying || pin.length !== 6}
         fullWidth
       >
-        ยืนยัน PIN
+        ยืนยันรหัสผ่าน
       </Button>
     </form>
   );
