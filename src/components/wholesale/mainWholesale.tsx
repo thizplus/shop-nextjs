@@ -18,6 +18,7 @@ import Payment from '../global/header/payment';
 import FooterStore from '../global/footerStore';
 import Slider from '../global/Slider';
 import PinDialog from '../global/PinDialog';
+import TickerDisplay from '../global/TickerDisplay';
 
 type PropsPriceId = {
   priceId: string;
@@ -187,6 +188,9 @@ const MainWholesale: React.FC<PropsPriceId> = ({
       />
 
       {hasSlides && <Slider />}
+
+      {/* เพิ่ม TickerDisplay สำหรับร้านค้าตามราคา */}
+      {config?.tickers && <TickerDisplay priceId={priceId} />}
 
       <ProductList
         priceId={priceId}

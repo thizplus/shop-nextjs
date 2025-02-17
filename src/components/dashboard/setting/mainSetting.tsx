@@ -33,6 +33,7 @@ import type { TypePriceList } from '@/types/priceListTypes'
 import FileUpload from './fileUpload'
 import SliderSection from './SliderSection'
 import ColorPickerButton from './ColorPickerButton'
+import TickerSettings from './TickerSettings'
 
 
 const MainSetting = () => {
@@ -136,7 +137,8 @@ const MainSetting = () => {
         ...config.displayConfig,
 
         // ทำให้แน่ใจว่า sliders array ไม่เป็น undefined
-        sliders: config.displayConfig.sliders || []
+        sliders: config.displayConfig.sliders || [],
+        tickers: config.tickers || [] // เพิ่มส่วนนี้
       }
     };
 
@@ -379,6 +381,7 @@ const MainSetting = () => {
           <Tab value='5' label='รูปแบบการขาย' />
           <Tab value='6' label='ค่าจัดส่ง' />
           <Tab value="7" label="การแสดงผล" />
+          <Tab value="8" label="อักษรวิ่ง" />
         </TabList>
 
         {/* Line Login Config */}
@@ -722,6 +725,19 @@ const MainSetting = () => {
 
         </TabPanel>
 
+
+        {/* Tab Panels อื่นๆ */}
+        <TabPanel value="8">
+          <TickerSettings
+            tickers={config.tickers || []}
+            onUpdate={(newTickers) => {
+              setConfig({
+                ...config,
+                tickers: newTickers
+              });
+            }}
+          />
+        </TabPanel>
 
       </TabContext >
 

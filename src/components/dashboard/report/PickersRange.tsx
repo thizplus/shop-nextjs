@@ -4,6 +4,7 @@ import { forwardRef } from 'react'
 import Grid from '@mui/material/Grid'
 import type { TextFieldProps } from '@mui/material/TextField'
 import { format } from 'date-fns'
+import { th } from 'date-fns/locale/th' // import locale ภาษาไทย
 
 import AppReactDatepicker from './AppReactDatepicker'
 import CustomTextField from '@core/components/mui/TextField'
@@ -54,6 +55,8 @@ const PickersRange = ({ value, onChange }: PickersRangeProps) => {
           onChange={handleOnChange}
           shouldCloseOnSelect={false}
           id='date-range-picker'
+          locale={th} // กำหนด locale เป็นภาษาไทย
+          dateFormat="dd MMMM yyyy" // กำหนดรูปแบบวันที่
           customInput={
             <CustomInput
               label='เลือกช่วงวันที่'

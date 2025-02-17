@@ -4,7 +4,7 @@
 import { create } from 'zustand'
 
 import actionGetStoreConfig from '@/actions/backend/setting/getStoreConfig'
-import type { DisplayConfig, LineLoginConfig, LineMessageConfig, SaleModelConfig, ShippingCostConfig, SlipOKConfig, TelegramNotificationConfig } from '@/types/storeConfigTypes';
+import type { DisplayConfig, ITickerMessage, LineLoginConfig, LineMessageConfig, SaleModelConfig, ShippingCostConfig, SlipOKConfig, TelegramNotificationConfig } from '@/types/storeConfigTypes';
 
 
 
@@ -16,6 +16,7 @@ interface StoreConfig {
   saleModel: SaleModelConfig;
   shippingCost: ShippingCostConfig;
   displayConfig: DisplayConfig; // เพิ่มส่วนนี้
+  tickers: ITickerMessage[]; // เพิ่ม tickers
 }
 
 interface ConfigState {
@@ -48,7 +49,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
         saleModel: response.saleModel,
         shippingCost: response.shippingCost,
         displayConfig: response.displayConfig,
-
+        tickers: response.tickers || [] // เพิ่ม tickers พร้อม default value เป็น array ว่าง
       };
 
       set({ config, loading: false, error: null });

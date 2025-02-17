@@ -13,9 +13,10 @@ import { usePendingOrders } from '@/actions/backend/orders/usePendingOrders';
 
 import Slider from '../global/Slider';
 import FooterStore from '../global/footerStore';
-import PriceTicker from '../global/PriceTicker';
+
 import { usePin } from '@/actions/client/usePin';
 import PinDialog from '../global/PinDialog';
+import TickerDisplay from '../global/TickerDisplay';
 
 type PropsMainStore = {
   priceId: string;
@@ -112,7 +113,8 @@ const MainStore = ({ priceId, liffId }: PropsMainStore) => {
       <HeaderStore />
 
       <Slider />
-      {config && <PriceTicker saleModel={config.saleModel} />}
+      {/* เพิ่ม TickerDisplay สำหรับร้านค้าหลัก */}
+      {config?.tickers && <TickerDisplay />}
       {config && <ProductList priceIds={config.saleModel.listPrice.map(price => price.id)} />}
 
       {/* Show Payment dialog for pending order */}

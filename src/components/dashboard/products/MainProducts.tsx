@@ -241,7 +241,7 @@ const MainProducts = () => {
         </div>
 
 
-        <div className='flex gap-2 items-center'>
+        <div className='flex gap-2 items-center flex-wrap'>
           {selected.length > 0 && (
             <Button
               variant="contained"

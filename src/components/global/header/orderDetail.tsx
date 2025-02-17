@@ -1,34 +1,30 @@
-// React Imports
 import { useState } from 'react'
 
-// MUI Imports
-import Button from '@mui/material/Button'
-import Dialog from '@mui/material/Dialog'
-
-import DialogContent from '@mui/material/DialogContent'
-import DialogActions from '@mui/material/DialogActions'
-
-import ListAltIcon from '@mui/icons-material/ListAlt';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogActions
+} from '@mui/material'
+import ListAltIcon from '@mui/icons-material/ListAlt'
 
 import type { TypeOrder } from '@/types/orderTypes'
 import { formatNumber } from '@/components/global/functions/numberFormat'
-import getStatusColor from '@/components/global/functions/statusColor'
+import StatusLabel from '../statusLabel'
+import ShippingLabel from '../shippingLabel'
+
 
 type propsOrderDetail = {
   order: TypeOrder
 }
 
 const OrderDetail = ({ order }: propsOrderDetail) => {
-  // States
   const [open, setOpen] = useState<boolean>(false)
-
   const handleClickOpen = () => setOpen(true)
-
   const handleClose = () => setOpen(false)
 
   return (
     <>
-
       <p className='text-sm cursor-pointer flex' onClick={handleClickOpen}>
         <ListAltIcon className='text-[16px] my-auto' /><span className='my-auto'>รายละเอียด</span>
       </p>
@@ -47,11 +43,12 @@ const OrderDetail = ({ order }: propsOrderDetail) => {
         }}
       >
         <div className='px-6 pt-4'>
-          <p className='text-md'>คำสั่งซื้อ # <span className='font-bold'>{order.orderId}</span></p>
+          <div className='flex justify-between items-center'>
+            <p className='text-md'>คำสั่งซื้อ # <span className='font-bold'>{order.orderId}</span></p>
+            <StatusLabel status={order.payment.status} />
+          </div>
         </div>
         <DialogContent>
-          <p className={`text-md font-bold leading-none ${getStatusColor(order.payment.status)}`}>{order.payment.status}</p>
-
           <div className='grid grid-cols-[1fr_20%_10%] gap-2 py-2 border-b-[1px] font-bold'>
             <p className='text-md'>รายการ</p>
             <p className='text-md text-right'>ราคา</p>
@@ -60,9 +57,8 @@ const OrderDetail = ({ order }: propsOrderDetail) => {
           {
             order.listProducts.map((item, index) => (
               <div key={index} className='grid grid-cols-[1fr_20%_10%] gap-2 py-2 border-b-[1px]'>
-                <div className=' leading-none'>
+                <div className='leading-none'>
                   <p className='text-sm font-bold'>{item.name}</p>
-
                 </div>
                 <p className='text-sm text-right'>{formatNumber(item.price)}฿ X {item.qty}</p>
                 <p className='text-sm text-right'>{formatNumber(item.total)}฿</p>
@@ -71,26 +67,37 @@ const OrderDetail = ({ order }: propsOrderDetail) => {
           }
 
           <div className='py-2 border-b-[1px]'>
-            <p>ที่อยู่จัดจัดส่ง: </p>
-            <div className=" leading-none flex gap-3">
+            <div className='flex justify-between items-center mb-2'>
+              <p className='font-bold'>ข้อมูลการจัดส่ง:</p>
+              <ShippingLabel status={order.shippingMethod} />
+            </div>
+            <div className="leading-none flex gap-3">
               <i className='tabler-map-pin text-[64px] my-auto' />
-
               <div className='leading-none my-auto'>
                 <p className='text-bold flex gap-2 font-bold text-sm leading-none'>
-                  {`${order.shippingInfo.cusName}
-                ${order.shippingInfo.cusTel}`}
+                  {`${order.shippingInfo.cusName} ${order.shippingInfo.cusTel}`}
                 </p>
                 <p className='leading-none text-sm'>
-                  {`${order.shippingInfo.addressNo}
-                  ${order.shippingInfo.district}
-                  ${order.shippingInfo.amphoe}
-                  ${order.shippingInfo.province}
-                  ${order.shippingInfo.zipcode}`}
+                  {`${order.shippingInfo.addressNo} ${order.shippingInfo.district} ${order.shippingInfo.amphoe} ${order.shippingInfo.province} ${order.shippingInfo.zipcode}`}
                 </p>
-
-                <p className='text-bold flex gap-2 font-bold text-sm leading-none'>
-                  {`${order.shippingInfo.location} `}
-                </p>
+                {order.shippingInfo.location && (
+                  <p className='text-bold flex gap-2 font-bold text-sm leading-none mt-1'>
+                    {order.shippingInfo.location}
+                  </p>
+                )}
+                {order.shippingInfo.trackingNo && (
+                  <p className='text-sm mt-2'>
+                    <span className='font-semibold'>เลขพัสดุ: </span>
+                    <a
+                      href={`https://th.kerryexpress.com/th/track/?track=${order.shippingInfo.trackingNo}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 underline"
+                    >
+                      {order.shippingInfo.trackingNo}
+                    </a>
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -104,16 +111,22 @@ const OrderDetail = ({ order }: propsOrderDetail) => {
               <p>ค่าจัดส่ง:</p>
               <p>{formatNumber(order.shippingCost)}฿</p>
             </div>
-            <div className='flex gap-2 justify-between'>
+            {order.discountAmount > 0 && (
+              <div className='flex gap-2 justify-between text-red-500'>
+                <p>ส่วนลด:</p>
+                <p>-{formatNumber(order.discountAmount)}฿</p>
+              </div>
+            )}
+            <div className='flex gap-2 justify-between font-bold mt-2'>
               <p>ยอดรวมทั้งสิ้น:</p>
               <p>{formatNumber(order.netTotal)}฿</p>
             </div>
           </div>
-
         </DialogContent>
         <DialogActions className='dialog-actions-dense'>
-
-          <Button onClick={handleClose} color='error' variant='outlined'>ปิดหน้าจอ</Button>
+          <Button onClick={handleClose} color='error' variant='outlined'>
+            ปิดหน้าจอ
+          </Button>
         </DialogActions>
       </Dialog>
     </>

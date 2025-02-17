@@ -61,6 +61,15 @@ export interface SliderImage {
   url: string;
 }
 
+// เพิ่ม interface สำหรับอักษรวิ่ง
+export interface ITickerMessage {
+  id: string;
+  message: string;
+  color?: string;
+  isActive: boolean;
+  priceId?: string; // null หรือไม่มีคือเป็นของร้านหลัก
+}
+
 // สำหรับการแสดงผล
 export interface DisplayConfig {
   logo?: string;
@@ -69,6 +78,7 @@ export interface DisplayConfig {
   isProtected: boolean; // เพิ่มส่วนนี้
   shopName?: string;
   shopSlogan?: string;
+
 }
 
 // Main Config Type
@@ -80,4 +90,5 @@ export interface StoreConfig {
   saleModel: SaleModelConfig;
   shippingCost: ShippingCostConfig;
   displayConfig: DisplayConfig; // เพิ่มส่วนนี้
+  tickers: ITickerMessage[]; // เพิ่มส่วนนี้
 }
