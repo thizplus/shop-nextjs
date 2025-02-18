@@ -577,7 +577,66 @@ const MainSetting = () => {
                   onChange={(e) => handleSaleModelChange('minOrderValue', Number(e.target.value))}
                 />
               )}
-              {/* ส่วนของการตั้งค่าราคาอื่นๆ */}
+
+              <Select
+                value={config.saleModel.type}
+                onChange={handleSaleModelTypeChange}
+                fullWidth
+                size='small'
+                className='my-4'
+              >
+                <MenuItem value="single">ราคาเดียว</MenuItem>
+                <MenuItem value="multiple">หลายราคา</MenuItem>
+              </Select>
+
+              {config.saleModel.type === 'single' ? (
+                <Select
+                  value={config.saleModel.listPrice[0]?.id || ''}
+                  onChange={(e) => handlePriceChange(0, 'id', e.target.value)}
+                  fullWidth
+                  size='small'
+                >
+                  {priceData.items.map((price: TypePriceList) => (
+                    <MenuItem key={price._id.toString()} value={price.priceId}>
+                      {price.priceName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              ) : (
+                <>
+                  {config.saleModel.listPrice.map((price, index) => (
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                      <Select
+                        value={price.id}
+                        onChange={(e) => handlePriceChange(index, 'id', e.target.value)}
+                        style={{ marginRight: '10px', flexGrow: 1 }}
+                        size='small'
+                      >
+                        {priceData.items.map((priceItem: TypePriceList) => (
+                          <MenuItem key={priceItem._id.toString()} value={priceItem.priceId}>
+                            {priceItem.priceName}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      <TextField
+                        label="ยอดซื้อขั้นต่ำ"
+                        variant="outlined"
+                        type="number"
+                        size='small'
+                        value={price.minPurchase}
+                        onChange={(e) => handlePriceChange(index, 'minPurchase', Number(e.target.value))}
+                        style={{ marginRight: '10px', width: '150px' }}
+                      />
+                      <IconButton onClick={() => handleRemovePrice(index)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </div>
+                  ))}
+                  <Button startIcon={<AddIcon />} onClick={handleAddPrice}>
+                    เพิ่มราคา
+                  </Button>
+                </>
+              )}
             </AccordionDetails>
           </Accordion>
 
@@ -601,7 +660,35 @@ const MainSetting = () => {
                 value={config.shippingCost?.standard.value ?? 0}
                 onChange={(e) => handleInputChange('shippingCost', { standard: { ...config.shippingCost?.standard, value: Number(e.target.value) } })}
               />
-              {/* ส่วนของการตั้งค่าการจัดส่งอื่นๆ */}
+              <TextField
+                label="ค่าจัดส่งมาตรฐาน"
+                variant="outlined"
+                type="number"
+                fullWidth
+                size="small"
+                className='mb-4'
+                value={config.shippingCost?.standard.cost ?? 0}
+                onChange={(e) => handleInputChange('shippingCost', { standard: { ...config.shippingCost?.standard, cost: Number(e.target.value) } })}
+              />
+              {config.shippingCost && (
+                <TextField
+                  label={`หากมากกว่า ${formatNumber(config.shippingCost.standard.value)} = ราคาสินค้าทั้งหมด หารด้วย ${config.shippingCost.special.value}`}
+                  variant="outlined"
+                  type="number"
+                  fullWidth
+                  size="small"
+                  className='mb-4'
+                  value={config.shippingCost.special.value}
+                  onChange={(e) => handleInputChange('shippingCost', { special: { ...config.shippingCost.special, value: Number(e.target.value) } })}
+                />
+              )}
+              {config.shippingCost && (
+                <>
+                  <p className='text-sm'>ซื้อสินค้า 1 - {formatNumber(config.shippingCost.standard.value)}  : ค่าจัดส่ง = {config.shippingCost.standard.cost} บาท</p>
+                  <p className='text-sm'>ซื้อสินค้า {formatNumber(config.shippingCost.standard.value)} ขึ้นไป : ค่าจัดส่ง = ราคาสินค้าในตระกร้า / {config.shippingCost.special.value}</p>
+                  <p className='text-sm'>สมมุติซื้อสินค้า 10,000 บาท : ค่าจัดส่ง = {formatNumber(10000 / config.shippingCost.special.value)} บาท</p>
+                </>
+              )}
             </AccordionDetails>
           </Accordion>
 
@@ -615,6 +702,18 @@ const MainSetting = () => {
             </AccordionSummary>
             <AccordionDetails>
               <Typography variant="h6" className="mb-4">ตั้งค่าการแสดงผล</Typography>
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.displayConfig.isProtected}
+                    onChange={(e) => handleDisplayConfigChange('isProtected', e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label="เปิดใช้งานระบบป้องกันหน้าเว็บไซต์"
+              />
+
               <div className="mb-6 max-w-[250px]">
                 <Typography variant="subtitle1" className="mb-2">โลโก้ร้าน</Typography>
                 <FileUpload
@@ -624,7 +723,43 @@ const MainSetting = () => {
                   placeholderText="อัพโหลดโลโก้ร้านของคุณที่นี่..."
                 />
               </div>
-              {/* ส่วนของการตั้งค่าการแสดงผลอื่นๆ */}
+
+              <div className="mb-6">
+                <Typography variant="subtitle1" className="mb-2">รูปภาพสไลด์</Typography>
+                <SliderSection
+                  sliders={config.displayConfig.sliders}
+                  onRemove={handleRemoveSlider}
+                  onAdd={handleAddSlider}
+                />
+              </div>
+
+              <div className="mb-6">
+                <Typography variant="subtitle1" className="mb-2">เลือกสีของร้านค่า</Typography>
+                <ColorPickerButton
+                  color={config.displayConfig.primaryColor}
+                  onChange={(color) => handleDisplayConfigChange('primaryColor', color)}
+                />
+              </div>
+
+              <TextField
+                label="ชื่อร้าน"
+                variant="outlined"
+                fullWidth
+                size="small"
+                className='mb-4'
+                value={config.displayConfig.shopName || ''}
+                onChange={(e) => handleDisplayConfigChange('shopName', e.target.value)}
+              />
+
+              <TextField
+                label="สโลแกน"
+                variant="outlined"
+                fullWidth
+                size="small"
+                className='mb-4'
+                value={config.displayConfig.shopSlogan || ''}
+                onChange={(e) => handleDisplayConfigChange('shopSlogan', e.target.value)}
+              />
             </AccordionDetails>
           </Accordion>
 
