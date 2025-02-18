@@ -24,6 +24,11 @@ import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 
 
+import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
+
 import useStoreConfig from '@/actions/backend/setting/useStoreConfig'
 import usePriceAll from '@/actions/backend/price/usePriceAll'
 import type { StoreConfig, ListPrice, SlipOKConfig, LineMessageConfig, DisplayConfig, TelegramNotificationConfig } from '@/types/storeConfigTypes'
@@ -38,6 +43,10 @@ import TickerSettings from './TickerSettings'
 
 const MainSetting = () => {
   const queryClient = useQueryClient();
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const [value, setValue] = useState<string>('1');
   const { data: storeConfig, status: configStatus, error: configError } = useStoreConfig();
   const { data: priceData, status: priceStatus, error: priceError } = usePriceAll(1, 100);
@@ -372,374 +381,648 @@ const MainSetting = () => {
 
   return (
     <>
-      <TabContext value={value}>
-        <TabList onChange={handleChange} aria-label='store configuration tabs'>
-          <Tab value='1' label='LINE LOGIN' />
-          <Tab value='2' label='TELEGRAM NOTIFICATION' />
-          <Tab value='3' label='LINE MESSAGE' />
-          <Tab value='4' label='SLIP OK' />
-          <Tab value='5' label='รูปแบบการขาย' />
-          <Tab value='6' label='ค่าจัดส่ง' />
-          <Tab value="7" label="การแสดงผล" />
-          <Tab value="8" label="อักษรวิ่ง" />
-        </TabList>
 
-        {/* Line Login Config */}
-        <TabPanel value='1' className='max-w-xs'>
-          <Typography variant="h6" className='mb-4'>LINE LOGIN Configuration</Typography>
+      {isMobile ? (
 
-
-          <TextField
-            label="LINE LIFF ID"
-            variant="outlined"
-            fullWidth
-            className='mb-4'
-            size="small"
-            value={config.lineLogin?.LINE_LIFF_ID || ''}
-            onChange={(e) => handleInputChange('lineLogin', { LINE_LIFF_ID: e.target.value })}
-          />
-
-
-        </TabPanel>
-
-        {/* Line Notification */}
-        <TabPanel value='2' className='max-w-xs'>
-          <Typography variant="h6" className='mb-4'>TELEGRAM Configuration</Typography>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={config.telegramNotification?.TELEGRAM_ENABLED || false}
-                onChange={(e) => handleTelegramNotificationChange('TELEGRAM_ENABLED', e.target.checked)}
-                color="primary"
+        <div className="space-y-2">
+          {/* LINE LOGIN */}
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
+            >
+              <Typography>LINE LOGIN</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="h6" className='mb-4'>LINE LOGIN Configuration</Typography>
+              <TextField
+                label="LINE LIFF ID"
+                variant="outlined"
+                fullWidth
+                className='mb-4'
+                size="small"
+                value={config.lineLogin?.LINE_LIFF_ID || ''}
+                onChange={(e) => handleInputChange('lineLogin', { LINE_LIFF_ID: e.target.value })}
               />
-            }
-            label="เปิดใช้งานการแจ้งเตือน TELEGRAM"
-            className='mb-4'
-          />
-          <TextField
-            label="TELEGRAM BOT TOKEN"
-            variant="outlined"
-            fullWidth
-            size="small"
-            value={config.telegramNotification?.TELEGRAM_BOT_TOKEN || ''}
-            onChange={(e) => handleTelegramNotificationChange('TELEGRAM_BOT_TOKEN', e.target.value)}
-            disabled={!config.telegramNotification?.TELEGRAM_ENABLED}
-            className='mb-4'
-          />
+            </AccordionDetails>
+          </Accordion>
 
-          <TextField
-            label="TELEGRAM CHAT ID"
-            variant="outlined"
-            fullWidth
-            size="small"
-            value={config.telegramNotification?.TELEGRAM_CHAT_ID || ''}
-            onChange={(e) => handleTelegramNotificationChange('TELEGRAM_CHAT_ID', e.target.value)}
-            disabled={!config.telegramNotification?.TELEGRAM_ENABLED}
-          />
-
-        </TabPanel>
-
-        {/* Line Message Config */}
-        <TabPanel value='3' className='max-w-xs'>
-          <Typography variant="h6" className='mb-4'>LINE Messaging API Configuration</Typography>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={config.lineMessage?.MESSAGE_ENABLED || false}
-                onChange={(e) => handleLineMessageChange('MESSAGE_ENABLED', e.target.checked)}
-                color="primary"
+          {/* TELEGRAM NOTIFICATION */}
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
+            >
+              <Typography>TELEGRAM NOTIFICATION</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="h6" className='mb-4'>TELEGRAM Configuration</Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.telegramNotification?.TELEGRAM_ENABLED || false}
+                    onChange={(e) => handleTelegramNotificationChange('TELEGRAM_ENABLED', e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label="เปิดใช้งานการแจ้งเตือน TELEGRAM"
+                className='mb-4'
               />
-            }
-            label="เปิดใช้งาน LINE Messaging API"
-            className='mb-4'
-          />
-          <TextField
-            label="Channel Access Token"
-            variant="outlined"
-            fullWidth
-            size="small"
-            className='mb-4'
-            value={config.lineMessage?.CHANNEL_ACCESS_TOKEN || ''}
-            onChange={(e) => handleLineMessageChange('CHANNEL_ACCESS_TOKEN', e.target.value)}
-            disabled={!config.lineMessage?.MESSAGE_ENABLED}
-          />
-          <TextField
-            label="Channel Secret"
-            variant="outlined"
-            fullWidth
-            size="small"
-            value={config.lineMessage?.CHANNEL_SECRET || ''}
-            onChange={(e) => handleLineMessageChange('CHANNEL_SECRET', e.target.value)}
-            disabled={!config.lineMessage?.MESSAGE_ENABLED}
-          />
-        </TabPanel>
-
-        {/* SlipOK Config */}
-        <TabPanel value='4' className='max-w-xs'>
-          <Typography variant="h6" className='mb-4'>Slip OK API Configuration</Typography>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={config.slipOK?.ENABLED || false}
-                onChange={(e) => handleSlipOKChange('ENABLED', e.target.checked)}
-                color="primary"
+              <TextField
+                label="TELEGRAM BOT TOKEN"
+                variant="outlined"
+                fullWidth
+                size="small"
+                value={config.telegramNotification?.TELEGRAM_BOT_TOKEN || ''}
+                onChange={(e) => handleTelegramNotificationChange('TELEGRAM_BOT_TOKEN', e.target.value)}
+                disabled={!config.telegramNotification?.TELEGRAM_ENABLED}
+                className='mb-4'
               />
-            }
-            label="เปิดใช้งาน Slip OK API"
-            className='mb-4'
-          />
-
-          <div className="mb-4">
-            <Typography variant="subtitle2" className="mb-2">QR Code Image</Typography>
-            <FileUpload
-              onFileSelected={setQrFile}
-              currentImageUrl={config.slipOK?.qr_image}
-              height={250}
-              placeholderText="แนบภาพ QR สำหรับให้ลูกค้าโอนเงินที่นี่..."
-            />
-          </div>
-
-          <TextField
-            label="API URL"
-            variant="outlined"
-            fullWidth
-            size="small"
-            className='mb-4'
-            value={config.slipOK?.API_URL || ''}
-            onChange={(e) => handleSlipOKChange('API_URL', e.target.value)}
-            disabled={!config.slipOK?.ENABLED}
-          />
-          <TextField
-            label="API Key"
-            variant="outlined"
-            fullWidth
-            size="small"
-            value={config.slipOK?.API_KEY || ''}
-            onChange={(e) => handleSlipOKChange('API_KEY', e.target.value)}
-            disabled={!config.slipOK?.ENABLED}
-          />
-        </TabPanel>
-
-        {/* Sale Model Config */}
-        <TabPanel value='5' className='max-w-xs'>
-          <Typography variant="h6" className='mb-4'>Sale Model Configuration</Typography>
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={config.saleModel.minOrderStatus}
-                onChange={(e) => handleSaleModelChange('minOrderStatus', e.target.checked)}
-                color="primary"
+              <TextField
+                label="TELEGRAM CHAT ID"
+                variant="outlined"
+                fullWidth
+                size="small"
+                value={config.telegramNotification?.TELEGRAM_CHAT_ID || ''}
+                onChange={(e) => handleTelegramNotificationChange('TELEGRAM_CHAT_ID', e.target.value)}
+                disabled={!config.telegramNotification?.TELEGRAM_ENABLED}
               />
-            }
-            label="เปิดใช้งานยอดสั่งซื้อขั้นต่ำ"
-            className=''
-          />
-          {config.saleModel.minOrderStatus && (
+            </AccordionDetails>
+          </Accordion>
+
+          {/* LINE MESSAGE */}
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
+            >
+              <Typography>LINE MESSAGE</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="h6" className='mb-4'>LINE Messaging API Configuration</Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.lineMessage?.MESSAGE_ENABLED || false}
+                    onChange={(e) => handleLineMessageChange('MESSAGE_ENABLED', e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label="เปิดใช้งาน LINE Messaging API"
+                className='mb-4'
+              />
+              <TextField
+                label="Channel Access Token"
+                variant="outlined"
+                fullWidth
+                size="small"
+                className='mb-4'
+                value={config.lineMessage?.CHANNEL_ACCESS_TOKEN || ''}
+                onChange={(e) => handleLineMessageChange('CHANNEL_ACCESS_TOKEN', e.target.value)}
+                disabled={!config.lineMessage?.MESSAGE_ENABLED}
+              />
+              <TextField
+                label="Channel Secret"
+                variant="outlined"
+                fullWidth
+                size="small"
+                value={config.lineMessage?.CHANNEL_SECRET || ''}
+                onChange={(e) => handleLineMessageChange('CHANNEL_SECRET', e.target.value)}
+                disabled={!config.lineMessage?.MESSAGE_ENABLED}
+              />
+            </AccordionDetails>
+          </Accordion>
+
+          {/* SLIP OK */}
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
+            >
+              <Typography>SLIP OK</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="h6" className='mb-4'>Slip OK API Configuration</Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.slipOK?.ENABLED || false}
+                    onChange={(e) => handleSlipOKChange('ENABLED', e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label="เปิดใช้งาน Slip OK API"
+                className='mb-4'
+              />
+              <div className="mb-4">
+                <Typography variant="subtitle2" className="mb-2">QR Code Image</Typography>
+                <FileUpload
+                  onFileSelected={setQrFile}
+                  currentImageUrl={config.slipOK?.qr_image}
+                  height={250}
+                  placeholderText="แนบภาพ QR สำหรับให้ลูกค้าโอนเงินที่นี่..."
+                />
+              </div>
+              <TextField
+                label="API URL"
+                variant="outlined"
+                fullWidth
+                size="small"
+                className='mb-4'
+                value={config.slipOK?.API_URL || ''}
+                onChange={(e) => handleSlipOKChange('API_URL', e.target.value)}
+                disabled={!config.slipOK?.ENABLED}
+              />
+              <TextField
+                label="API Key"
+                variant="outlined"
+                fullWidth
+                size="small"
+                value={config.slipOK?.API_KEY || ''}
+                onChange={(e) => handleSlipOKChange('API_KEY', e.target.value)}
+                disabled={!config.slipOK?.ENABLED}
+              />
+            </AccordionDetails>
+          </Accordion>
+
+          {/* รูปแบบการขาย */}
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
+            >
+              <Typography>รูปแบบการขาย</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="h6" className='mb-4'>Sale Model Configuration</Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.saleModel.minOrderStatus}
+                    onChange={(e) => handleSaleModelChange('minOrderStatus', e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label="เปิดใช้งานยอดสั่งซื้อขั้นต่ำ"
+              />
+              {config.saleModel.minOrderStatus && (
+                <TextField
+                  label="ยอดสั่งซื้อขั้นต่ำ"
+                  variant="outlined"
+                  type="number"
+                  fullWidth
+                  size="small"
+                  className='mt-2'
+                  value={config.saleModel.minOrderValue}
+                  onChange={(e) => handleSaleModelChange('minOrderValue', Number(e.target.value))}
+                />
+              )}
+              {/* ส่วนของการตั้งค่าราคาอื่นๆ */}
+            </AccordionDetails>
+          </Accordion>
+
+          {/* ค่าจัดส่ง */}
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
+            >
+              <Typography>ค่าจัดส่ง</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="h6" className='mb-4'>Shipping Cost Configuration</Typography>
+              <TextField
+                label="เมื่อสั่งซื้อต่ำกว่าหรือเท่ากับ"
+                variant="outlined"
+                type="number"
+                fullWidth
+                size="small"
+                className='mb-4'
+                value={config.shippingCost?.standard.value ?? 0}
+                onChange={(e) => handleInputChange('shippingCost', { standard: { ...config.shippingCost?.standard, value: Number(e.target.value) } })}
+              />
+              {/* ส่วนของการตั้งค่าการจัดส่งอื่นๆ */}
+            </AccordionDetails>
+          </Accordion>
+
+          {/* การแสดงผล */}
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
+            >
+              <Typography>การแสดงผล</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="h6" className="mb-4">ตั้งค่าการแสดงผล</Typography>
+              <div className="mb-6 max-w-[250px]">
+                <Typography variant="subtitle1" className="mb-2">โลโก้ร้าน</Typography>
+                <FileUpload
+                  onFileSelected={handleLogoUpload}
+                  currentImageUrl={config.displayConfig.logo}
+                  height={200}
+                  placeholderText="อัพโหลดโลโก้ร้านของคุณที่นี่..."
+                />
+              </div>
+              {/* ส่วนของการตั้งค่าการแสดงผลอื่นๆ */}
+            </AccordionDetails>
+          </Accordion>
+
+          {/* อักษรวิ่ง */}
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
+            >
+              <Typography>อักษรวิ่ง</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <TickerSettings
+                tickers={config.tickers || []}
+                onUpdate={(newTickers) => {
+                  setConfig({
+                    ...config,
+                    tickers: newTickers
+                  });
+                }}
+              />
+            </AccordionDetails>
+          </Accordion>
+        </div>
+      ) : (
+
+        <TabContext value={value}>
+          <TabList onChange={handleChange} aria-label='store configuration tabs'>
+            <Tab value='1' label='LINE LOGIN' />
+            <Tab value='2' label='TELEGRAM NOTIFICATION' />
+            <Tab value='3' label='LINE MESSAGE' />
+            <Tab value='4' label='SLIP OK' />
+            <Tab value='5' label='รูปแบบการขาย' />
+            <Tab value='6' label='ค่าจัดส่ง' />
+            <Tab value="7" label="การแสดงผล" />
+            <Tab value="8" label="อักษรวิ่ง" />
+          </TabList>
+
+          {/* Line Login Config */}
+          <TabPanel value='1' className='max-w-xs'>
+            <Typography variant="h6" className='mb-4'>LINE LOGIN Configuration</Typography>
+
+
             <TextField
-              label="ยอดสั่งซื้อขั้นต่ำ"
+              label="LINE LIFF ID"
               variant="outlined"
-              type="number"
+              fullWidth
+              className='mb-4'
+              size="small"
+              value={config.lineLogin?.LINE_LIFF_ID || ''}
+              onChange={(e) => handleInputChange('lineLogin', { LINE_LIFF_ID: e.target.value })}
+            />
+
+
+          </TabPanel>
+
+          {/* Line Notification */}
+          <TabPanel value='2' className='max-w-xs'>
+            <Typography variant="h6" className='mb-4'>TELEGRAM Configuration</Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={config.telegramNotification?.TELEGRAM_ENABLED || false}
+                  onChange={(e) => handleTelegramNotificationChange('TELEGRAM_ENABLED', e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="เปิดใช้งานการแจ้งเตือน TELEGRAM"
+              className='mb-4'
+            />
+            <TextField
+              label="TELEGRAM BOT TOKEN"
+              variant="outlined"
               fullWidth
               size="small"
-              className='mt-2'
-              value={config.saleModel.minOrderValue}
-              onChange={(e) => handleSaleModelChange('minOrderValue', Number(e.target.value))}
+              value={config.telegramNotification?.TELEGRAM_BOT_TOKEN || ''}
+              onChange={(e) => handleTelegramNotificationChange('TELEGRAM_BOT_TOKEN', e.target.value)}
+              disabled={!config.telegramNotification?.TELEGRAM_ENABLED}
+              className='mb-4'
             />
-          )}
 
-          <Select
-            value={config.saleModel.type}
-            onChange={handleSaleModelTypeChange}
-            fullWidth
-            size='small'
-            className='my-4'
-          >
-            <MenuItem value="single">ราคาเดียว</MenuItem>
-            <MenuItem value="multiple">หลายราคา</MenuItem>
-          </Select>
+            <TextField
+              label="TELEGRAM CHAT ID"
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={config.telegramNotification?.TELEGRAM_CHAT_ID || ''}
+              onChange={(e) => handleTelegramNotificationChange('TELEGRAM_CHAT_ID', e.target.value)}
+              disabled={!config.telegramNotification?.TELEGRAM_ENABLED}
+            />
 
-          {config.saleModel.type === 'single' ? (
+          </TabPanel>
+
+          {/* Line Message Config */}
+          <TabPanel value='3' className='max-w-xs'>
+            <Typography variant="h6" className='mb-4'>LINE Messaging API Configuration</Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={config.lineMessage?.MESSAGE_ENABLED || false}
+                  onChange={(e) => handleLineMessageChange('MESSAGE_ENABLED', e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="เปิดใช้งาน LINE Messaging API"
+              className='mb-4'
+            />
+            <TextField
+              label="Channel Access Token"
+              variant="outlined"
+              fullWidth
+              size="small"
+              className='mb-4'
+              value={config.lineMessage?.CHANNEL_ACCESS_TOKEN || ''}
+              onChange={(e) => handleLineMessageChange('CHANNEL_ACCESS_TOKEN', e.target.value)}
+              disabled={!config.lineMessage?.MESSAGE_ENABLED}
+            />
+            <TextField
+              label="Channel Secret"
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={config.lineMessage?.CHANNEL_SECRET || ''}
+              onChange={(e) => handleLineMessageChange('CHANNEL_SECRET', e.target.value)}
+              disabled={!config.lineMessage?.MESSAGE_ENABLED}
+            />
+          </TabPanel>
+
+          {/* SlipOK Config */}
+          <TabPanel value='4' className='max-w-xs'>
+            <Typography variant="h6" className='mb-4'>Slip OK API Configuration</Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={config.slipOK?.ENABLED || false}
+                  onChange={(e) => handleSlipOKChange('ENABLED', e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="เปิดใช้งาน Slip OK API"
+              className='mb-4'
+            />
+
+            <div className="mb-4">
+              <Typography variant="subtitle2" className="mb-2">QR Code Image</Typography>
+              <FileUpload
+                onFileSelected={setQrFile}
+                currentImageUrl={config.slipOK?.qr_image}
+                height={250}
+                placeholderText="แนบภาพ QR สำหรับให้ลูกค้าโอนเงินที่นี่..."
+              />
+            </div>
+
+            <TextField
+              label="API URL"
+              variant="outlined"
+              fullWidth
+              size="small"
+              className='mb-4'
+              value={config.slipOK?.API_URL || ''}
+              onChange={(e) => handleSlipOKChange('API_URL', e.target.value)}
+              disabled={!config.slipOK?.ENABLED}
+            />
+            <TextField
+              label="API Key"
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={config.slipOK?.API_KEY || ''}
+              onChange={(e) => handleSlipOKChange('API_KEY', e.target.value)}
+              disabled={!config.slipOK?.ENABLED}
+            />
+          </TabPanel>
+
+          {/* Sale Model Config */}
+          <TabPanel value='5' className='max-w-xs'>
+            <Typography variant="h6" className='mb-4'>Sale Model Configuration</Typography>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={config.saleModel.minOrderStatus}
+                  onChange={(e) => handleSaleModelChange('minOrderStatus', e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="เปิดใช้งานยอดสั่งซื้อขั้นต่ำ"
+              className=''
+            />
+            {config.saleModel.minOrderStatus && (
+              <TextField
+                label="ยอดสั่งซื้อขั้นต่ำ"
+                variant="outlined"
+                type="number"
+                fullWidth
+                size="small"
+                className='mt-2'
+                value={config.saleModel.minOrderValue}
+                onChange={(e) => handleSaleModelChange('minOrderValue', Number(e.target.value))}
+              />
+            )}
+
             <Select
-              value={config.saleModel.listPrice[0]?.id || ''}
-              onChange={(e) => handlePriceChange(0, 'id', e.target.value)}
+              value={config.saleModel.type}
+              onChange={handleSaleModelTypeChange}
               fullWidth
               size='small'
+              className='my-4'
             >
-              {priceData.items.map((price: TypePriceList) => (
-                <MenuItem key={price._id.toString()} value={price.priceId}>
-                  {price.priceName}
-                </MenuItem>
-              ))}
+              <MenuItem value="single">ราคาเดียว</MenuItem>
+              <MenuItem value="multiple">หลายราคา</MenuItem>
             </Select>
-          ) : (
-            <>
-              {config.saleModel.listPrice.map((price, index) => (
-                <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                  <Select
-                    value={price.id}
-                    onChange={(e) => handlePriceChange(index, 'id', e.target.value)}
-                    style={{ marginRight: '10px', flexGrow: 1 }}
-                    size='small'
-                  >
-                    {priceData.items.map((priceItem: TypePriceList) => (
-                      <MenuItem key={priceItem._id.toString()} value={priceItem.priceId}>
-                        {priceItem.priceName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <TextField
-                    label="ยอดซื้อขั้นต่ำ"
-                    variant="outlined"
-                    type="number"
-                    size='small'
-                    value={price.minPurchase}
-                    onChange={(e) => handlePriceChange(index, 'minPurchase', Number(e.target.value))}
-                    style={{ marginRight: '10px', width: '150px' }}
-                  />
-                  <IconButton onClick={() => handleRemovePrice(index)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </div>
-              ))}
-              <Button startIcon={<AddIcon />} onClick={handleAddPrice}>
-                เพิ่มราคา
-              </Button>
-            </>
-          )}
+
+            {config.saleModel.type === 'single' ? (
+              <Select
+                value={config.saleModel.listPrice[0]?.id || ''}
+                onChange={(e) => handlePriceChange(0, 'id', e.target.value)}
+                fullWidth
+                size='small'
+              >
+                {priceData.items.map((price: TypePriceList) => (
+                  <MenuItem key={price._id.toString()} value={price.priceId}>
+                    {price.priceName}
+                  </MenuItem>
+                ))}
+              </Select>
+            ) : (
+              <>
+                {config.saleModel.listPrice.map((price, index) => (
+                  <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                    <Select
+                      value={price.id}
+                      onChange={(e) => handlePriceChange(index, 'id', e.target.value)}
+                      style={{ marginRight: '10px', flexGrow: 1 }}
+                      size='small'
+                    >
+                      {priceData.items.map((priceItem: TypePriceList) => (
+                        <MenuItem key={priceItem._id.toString()} value={priceItem.priceId}>
+                          {priceItem.priceName}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    <TextField
+                      label="ยอดซื้อขั้นต่ำ"
+                      variant="outlined"
+                      type="number"
+                      size='small'
+                      value={price.minPurchase}
+                      onChange={(e) => handlePriceChange(index, 'minPurchase', Number(e.target.value))}
+                      style={{ marginRight: '10px', width: '150px' }}
+                    />
+                    <IconButton onClick={() => handleRemovePrice(index)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </div>
+                ))}
+                <Button startIcon={<AddIcon />} onClick={handleAddPrice}>
+                  เพิ่มราคา
+                </Button>
+              </>
+            )}
 
 
-        </TabPanel>
+          </TabPanel>
 
-        {/* Shipping Cost Config */}
-        <TabPanel value='6' className='max-w-sm'>
-          <Typography variant="h6" className='mb-4'>Shipping Cost Configuration</Typography>
-          <TextField
-            label="เมื่อสั่งซื้อต่ำกว่าหรือเท่ากับ"
-            variant="outlined"
-            type="number"
-            fullWidth
-            size="small"
-            className='mb-4'
-            value={config.shippingCost?.standard.value ?? 0}
-            onChange={(e) => handleInputChange('shippingCost', { standard: { ...config.shippingCost?.standard, value: Number(e.target.value) } })}
-          />
-          <TextField
-            label="ค่าจัดส่งมาตรฐาน"
-            variant="outlined"
-            type="number"
-            fullWidth
-            size="small"
-            className='mb-4'
-            value={config.shippingCost?.standard.cost ?? 0}
-            onChange={(e) => handleInputChange('shippingCost', { standard: { ...config.shippingCost?.standard, cost: Number(e.target.value) } })}
-          />
-          {config.shippingCost && (
+          {/* Shipping Cost Config */}
+          <TabPanel value='6' className='max-w-sm'>
+            <Typography variant="h6" className='mb-4'>Shipping Cost Configuration</Typography>
             <TextField
-              label={`หากมากกว่า ${formatNumber(config.shippingCost.standard.value)} = ราคาสินค้าทั้งหมด หารด้วย ${config.shippingCost.special.value}`}
+              label="เมื่อสั่งซื้อต่ำกว่าหรือเท่ากับ"
               variant="outlined"
               type="number"
               fullWidth
               size="small"
               className='mb-4'
-              value={config.shippingCost.special.value}
-              onChange={(e) => handleInputChange('shippingCost', { special: { ...config.shippingCost.special, value: Number(e.target.value) } })}
+              value={config.shippingCost?.standard.value ?? 0}
+              onChange={(e) => handleInputChange('shippingCost', { standard: { ...config.shippingCost?.standard, value: Number(e.target.value) } })}
             />
-          )}
-          {config.shippingCost && (
-            <>
-              <p className='text-sm'>ซื้อสินค้า 1 - {formatNumber(config.shippingCost.standard.value)}  : ค่าจัดส่ง = {config.shippingCost.standard.cost} บาท</p>
-              <p className='text-sm'>ซื้อสินค้า {formatNumber(config.shippingCost.standard.value)} ขึ้นไป : ค่าจัดส่ง = ราคาสินค้าในตระกร้า / {config.shippingCost.special.value}</p>
-              <p className='text-sm'>สมมุติซื้อสินค้า 10,000 บาท : ค่าจัดส่ง = {formatNumber(10000 / config.shippingCost.special.value)} บาท</p>
-            </>
-          )}
-        </TabPanel>
-
-
-        {/* Display Settings TabPanel */}
-        <TabPanel value="7" className="max-w-xl">
-          <Typography variant="h6" className="mb-4">ตั้งค่าการแสดงผล</Typography>
-
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={config.displayConfig.isProtected}
-                onChange={(e) => handleDisplayConfigChange('isProtected', e.target.checked)}
-                color="primary"
+            <TextField
+              label="ค่าจัดส่งมาตรฐาน"
+              variant="outlined"
+              type="number"
+              fullWidth
+              size="small"
+              className='mb-4'
+              value={config.shippingCost?.standard.cost ?? 0}
+              onChange={(e) => handleInputChange('shippingCost', { standard: { ...config.shippingCost?.standard, cost: Number(e.target.value) } })}
+            />
+            {config.shippingCost && (
+              <TextField
+                label={`หากมากกว่า ${formatNumber(config.shippingCost.standard.value)} = ราคาสินค้าทั้งหมด หารด้วย ${config.shippingCost.special.value}`}
+                variant="outlined"
+                type="number"
+                fullWidth
+                size="small"
+                className='mb-4'
+                value={config.shippingCost.special.value}
+                onChange={(e) => handleInputChange('shippingCost', { special: { ...config.shippingCost.special, value: Number(e.target.value) } })}
               />
-            }
-            label="เปิดใช้งานระบบป้องกันหน้าเว็บไซต์"
-          />
-          {/* Logo Upload */}
-          <div className="mb-6 max-w-[250px]">
-            <Typography variant="subtitle1" className="mb-2">โลโก้ร้าน</Typography>
-            <FileUpload
-              onFileSelected={handleLogoUpload}
-              currentImageUrl={config.displayConfig.logo}
-              height={200}
-              placeholderText="อัพโหลดโลโก้ร้านของคุณที่นี่..."
+            )}
+            {config.shippingCost && (
+              <>
+                <p className='text-sm'>ซื้อสินค้า 1 - {formatNumber(config.shippingCost.standard.value)}  : ค่าจัดส่ง = {config.shippingCost.standard.cost} บาท</p>
+                <p className='text-sm'>ซื้อสินค้า {formatNumber(config.shippingCost.standard.value)} ขึ้นไป : ค่าจัดส่ง = ราคาสินค้าในตระกร้า / {config.shippingCost.special.value}</p>
+                <p className='text-sm'>สมมุติซื้อสินค้า 10,000 บาท : ค่าจัดส่ง = {formatNumber(10000 / config.shippingCost.special.value)} บาท</p>
+              </>
+            )}
+          </TabPanel>
+
+
+          {/* Display Settings TabPanel */}
+          <TabPanel value="7" className="max-w-xl">
+            <Typography variant="h6" className="mb-4">ตั้งค่าการแสดงผล</Typography>
+
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={config.displayConfig.isProtected}
+                  onChange={(e) => handleDisplayConfigChange('isProtected', e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="เปิดใช้งานระบบป้องกันหน้าเว็บไซต์"
             />
-          </div>
+            {/* Logo Upload */}
+            <div className="mb-6 max-w-[250px]">
+              <Typography variant="subtitle1" className="mb-2">โลโก้ร้าน</Typography>
+              <FileUpload
+                onFileSelected={handleLogoUpload}
+                currentImageUrl={config.displayConfig.logo}
+                height={200}
+                placeholderText="อัพโหลดโลโก้ร้านของคุณที่นี่..."
+              />
+            </div>
 
-          {/* Slider Images */}
-          <div className="mb-6">
-            <Typography variant="subtitle1" className="mb-2">รูปภาพสไลด์</Typography>
-            <SliderSection
-              sliders={config.displayConfig.sliders}
-              onRemove={handleRemoveSlider}
-              onAdd={handleAddSlider}
+            {/* Slider Images */}
+            <div className="mb-6">
+              <Typography variant="subtitle1" className="mb-2">รูปภาพสไลด์</Typography>
+              <SliderSection
+                sliders={config.displayConfig.sliders}
+                onRemove={handleRemoveSlider}
+                onAdd={handleAddSlider}
+              />
+            </div>
+
+            {/* Primary Color */}
+            <div className="mb-6">
+              <Typography variant="subtitle1" className="mb-2">เลือกสีของร้านค่า</Typography>
+              <ColorPickerButton
+                color={config.displayConfig.primaryColor}
+                onChange={(color) => handleDisplayConfigChange('primaryColor', color)}
+              />
+            </div>
+
+            <TextField
+              label="ชื่อร้าน"
+              variant="outlined"
+              fullWidth
+              size="small"
+              className='mb-4'
+              value={config.displayConfig.shopName || ''}
+              onChange={(e) => handleDisplayConfigChange('shopName', e.target.value)}
+
             />
-          </div>
 
-          {/* Primary Color */}
-          <div className="mb-6">
-            <Typography variant="subtitle1" className="mb-2">เลือกสีของร้านค่า</Typography>
-            <ColorPickerButton
-              color={config.displayConfig.primaryColor}
-              onChange={(color) => handleDisplayConfigChange('primaryColor', color)}
+            <TextField
+              label="สโลแกน"
+              variant="outlined"
+              fullWidth
+              size="small"
+              className='mb-4'
+              value={config.displayConfig.shopSlogan || ''}
+              onChange={(e) => handleDisplayConfigChange('shopSlogan', e.target.value)}
+
             />
-          </div>
 
-          <TextField
-            label="ชื่อร้าน"
-            variant="outlined"
-            fullWidth
-            size="small"
-            className='mb-4'
-            value={config.displayConfig.shopName || ''}
-            onChange={(e) => handleDisplayConfigChange('shopName', e.target.value)}
-
-          />
-
-          <TextField
-            label="สโลแกน"
-            variant="outlined"
-            fullWidth
-            size="small"
-            className='mb-4'
-            value={config.displayConfig.shopSlogan || ''}
-            onChange={(e) => handleDisplayConfigChange('shopSlogan', e.target.value)}
-
-          />
-
-        </TabPanel>
+          </TabPanel>
 
 
-        {/* Tab Panels อื่นๆ */}
-        <TabPanel value="8">
-          <TickerSettings
-            tickers={config.tickers || []}
-            onUpdate={(newTickers) => {
-              setConfig({
-                ...config,
-                tickers: newTickers
-              });
-            }}
-          />
-        </TabPanel>
+          {/* Tab Panels อื่นๆ */}
+          <TabPanel value="8">
+            <TickerSettings
+              tickers={config.tickers || []}
+              onUpdate={(newTickers) => {
+                setConfig({
+                  ...config,
+                  tickers: newTickers
+                });
+              }}
+            />
+          </TabPanel>
 
-      </TabContext >
+        </TabContext >
+      )}
+
+
+
 
       <Button
         onClick={handleUpdate}
