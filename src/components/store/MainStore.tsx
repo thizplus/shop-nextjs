@@ -17,6 +17,8 @@ import FooterStore from '../global/footerStore';
 import { usePin } from '@/actions/client/usePin';
 import PinDialog from '../global/PinDialog';
 import TickerDisplay from '../global/TickerDisplay';
+import useMaintenance from '@/actions/client/useMaintenance';
+import MaintenancePage from '../global/MaintenancePage';
 
 type PropsMainStore = {
   priceId: string;
@@ -36,6 +38,19 @@ const MainStore = ({ priceId, liffId }: PropsMainStore) => {
 
   // State for payment dialog
   const [showPayment, setShowPayment] = useState(false);
+
+  // ใช้ hook ตรวจสอบ maintenance
+  const {
+    isLoading: isMaintenanceLoading,
+    data: maintenanceData,
+    isMaintenanceActive,
+    shouldBlockUser
+  } = useMaintenance();
+
+  // ตรวจสอบว่าควรบล็อคผู้ใช้หรือไม่
+  const shouldBlock = isMaintenanceActive && (
+    !user || shouldBlockUser(user.createdAt ? user.createdAt.toString() : undefined)
+  );
 
 
 
@@ -95,7 +110,7 @@ const MainStore = ({ priceId, liffId }: PropsMainStore) => {
   }, [refreshPendingOrders]);
 
   // Show loading state
-  if (isLiffLoading || configLoading || isPendingOrderLoading) {
+  if (isLiffLoading || configLoading || isPendingOrderLoading || isMaintenanceLoading) {
     return <Loading />;
   }
 
@@ -105,6 +120,25 @@ const MainStore = ({ priceId, liffId }: PropsMainStore) => {
       <div className="p-4 text-red-500">
         เกิดข้อผิดพลาดในการเชื่อมต่อ: {liffError}
       </div>
+    );
+  }
+
+
+
+  // ถ้ามีการปิดปรับปรุงและควรบล็อคผู้ใช้ ให้แสดงหน้า maintenance
+  if (shouldBlock) {
+    // ตรวจสอบว่าเป็นการจำกัดผู้ใช้ใหม่หรือไม่
+    const isRestrictedMode = maintenanceData?.config?.isEnabled &&
+      maintenanceData?.config?.isRestrictNewUsers &&
+      user?.createdAt !== undefined;
+
+    return (
+      <MaintenancePage
+        message={maintenanceData?.config?.message}
+        storeName={process.env.NEXT_PUBLIC_SITE_NAME}
+        isRestrictedUser={isRestrictedMode}
+        restrictDate={maintenanceData?.config?.restrictAfterDate}
+      />
     );
   }
 

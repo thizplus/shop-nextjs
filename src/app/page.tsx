@@ -7,9 +7,10 @@ import MainStore from "@/components/store/MainStore";
 
 
 export default async function Page() {
+
+
+
   const config = await actionGetStoreConfig();
-
-
 
   if (!config) {
     notFound();
@@ -28,3 +29,4 @@ export default async function Page() {
     </>
   )
 }
+
