@@ -19,6 +19,8 @@ import FooterStore from '../global/footerStore';
 import Slider from '../global/Slider';
 import PinDialog from '../global/PinDialog';
 import TickerDisplay from '../global/TickerDisplay';
+import useMaintenance from '@/actions/client/useMaintenance';
+import MaintenancePage from '../global/MaintenancePage';
 
 type PropsPriceId = {
   priceId: string;
@@ -52,6 +54,20 @@ const MainWholesale: React.FC<PropsPriceId> = ({
 
   // Payment dialog state
   const [showPayment, setShowPayment] = useState(false);
+
+  const {
+    isLoading: isMaintenanceLoading,
+    data: maintenanceData,
+    isMaintenanceActive,
+    shouldBlockUser
+  } = useMaintenance();
+
+  // ตรวจสอบว่าควรบล็อคผู้ใช้หรือไม่
+  const shouldBlock = isMaintenanceActive && (
+    !user || shouldBlockUser(user.createdAt ? user.createdAt.toString() : undefined)
+  );
+
+
 
   // Fetch pending orders
   const {
@@ -137,8 +153,8 @@ const MainWholesale: React.FC<PropsPriceId> = ({
 
   // Loading states
   const isInitialLoading = useMemo(() =>
-    isPriceLoading || isLiffLoading || configLoading,
-    [isPriceLoading, isLiffLoading, configLoading]
+    isPriceLoading || isLiffLoading || configLoading || isMaintenanceLoading,
+    [isPriceLoading, isLiffLoading, configLoading, isMaintenanceLoading]
   );
 
   const isDataLoading = useMemo(() =>
@@ -147,6 +163,8 @@ const MainWholesale: React.FC<PropsPriceId> = ({
   );
 
   // Early returns for different states
+
+
   if (isInitialLoading) {
     return <Loading />;
   }
@@ -175,8 +193,27 @@ const MainWholesale: React.FC<PropsPriceId> = ({
     return <NotFoundPage />;
   }
 
+
   const hasSlides = priceData.items.length > 0;
   const hasQRImage = config?.slipOK?.qr_image;
+
+
+  // ถ้ามีการปิดปรับปรุงและควรบล็อคผู้ใช้ ให้แสดงหน้า maintenance
+  if (shouldBlock) {
+    // ตรวจสอบว่าเป็นการจำกัดผู้ใช้ใหม่หรือไม่
+    const isRestrictedMode = maintenanceData?.config?.isEnabled &&
+      maintenanceData?.config?.isRestrictNewUsers &&
+      user?.createdAt !== undefined;
+
+    return (
+      <MaintenancePage
+        message={maintenanceData?.config?.message}
+        storeName={process.env.NEXT_PUBLIC_SITE_NAME}
+        isRestrictedUser={isRestrictedMode}
+        restrictDate={maintenanceData?.config?.restrictAfterDate}
+      />
+    );
+  }
 
   return (
     <>
